@@ -6,11 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Feed - CVSU NAIC</title>
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
     <!-- Component Stylesheets -->
     <link rel="stylesheet" href="assets/css/base.css">
     <link rel="stylesheet" href="assets/css/sidebar.css">

@@ -1,13 +1,7 @@
 <?php
-<<<<<<< HEAD
 require_once '../../../includes/auth_check.php';
 require_once '../../../includes/config.php';
 require_once '../assets/script/social_feed-script.php';
-=======
-require_once '../../../includes/config.php';
-require_once '../../../includes/auth_check.php';
-require_once '../assets/script/social_feed-script';
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
 
 header('Content-Type: application/json');
 
@@ -37,13 +31,8 @@ try {
             break;
 
         case 'department':
-<<<<<<< HEAD
             $whereConditions[] = "(p.visibility = 'department' AND JSON_CONTAINS(p.target_departments, ?))";
             $params[] = '"' . $departmentId . '"';
-=======
-            $whereConditions[] = "(p.visibility = 'department' AND JSON_CONTAINS(p.target_departments, CAST(? AS JSON)))";
-            $params[] = $departmentId;
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
             break;
 
         case 'pinned':
@@ -58,17 +47,10 @@ try {
             $whereConditions[] = "(
                 p.visibility = 'public' OR
                 p.user_id = ? OR
-<<<<<<< HEAD
                 (p.visibility = 'department' AND JSON_CONTAINS(p.target_departments, ?)) OR
                 (p.visibility = 'custom' AND JSON_CONTAINS(p.target_users, ?))
             )";
             $params = array_merge($params, [$userId, '"' . $departmentId . '"', '"' . $userId . '"']);
-=======
-                (p.visibility = 'department' AND JSON_CONTAINS(p.target_departments, CAST(? AS JSON))) OR
-                (p.visibility = 'custom' AND JSON_CONTAINS(p.target_users, CAST(? AS JSON)))
-            )";
-            $params = array_merge($params, [$userId, $departmentId, $userId]);
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
     }
 
     $whereClause = implode(' AND ', $whereConditions);
@@ -88,7 +70,6 @@ try {
         LEFT JOIN departments d ON u.department_id = d.id
         WHERE {$whereClause}
         ORDER BY {$orderBy}
-<<<<<<< HEAD
     ";
 
     // Build final query with LIMIT and OFFSET directly in SQL to avoid parameter issues
@@ -96,13 +77,6 @@ try {
 
     $allParams = array_merge([$userId], $params);
     $stmt = $pdo->prepare($finalQuery);
-=======
-        LIMIT ? OFFSET ?
-    ";
-
-    $allParams = array_merge([$userId], $params, [$limit, $offset]);
-    $stmt = $pdo->prepare($query);
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
     $stmt->execute($allParams);
     $posts = $stmt->fetchAll();
 

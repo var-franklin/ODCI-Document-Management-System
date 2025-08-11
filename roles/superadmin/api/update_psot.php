@@ -1,11 +1,7 @@
 <?php
 require_once '../../../includes/config.php';
 require_once '../../../includes/auth_check.php';
-<<<<<<< HEAD
 require_once '../assets/script/social_feed-script.php';
-=======
-require_once '../assets/script/social_feed-script';
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
 
 header('Content-Type: application/json');
 
