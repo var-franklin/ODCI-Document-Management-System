@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-=======
-// social-feed-core.js
-// Core module for social feed functionality
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
 
 class SocialFeedCore {
     constructor() {
@@ -220,7 +215,6 @@ class SocialFeedCore {
         
         try {
             const response = await fetch(`api/get_posts.php?filter=${this.currentFilter}&page=${page}&limit=10`);
-<<<<<<< HEAD
             
             // Log the response for debugging
             console.log('Response status:', response.status);
@@ -238,9 +232,6 @@ class SocialFeedCore {
                 console.error('Response was:', responseText);
                 throw new Error(`Server returned invalid JSON. Response: ${responseText.substring(0, 200)}...`);
             }
-=======
-            const data = await response.json();
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
             
             if (data.success) {
                 this.handlePostsLoaded(data.posts, page);
@@ -249,11 +240,7 @@ class SocialFeedCore {
             }
         } catch (error) {
             console.error('Error loading posts:', error);
-<<<<<<< HEAD
             this.showError(`Error loading posts: ${error.message}`);
-=======
-            this.showError('Error loading posts');
->>>>>>> bc417a8a6cb2f64d0b060ad6ae263818bc40de4d
         } finally {
             this.isLoading = false;
         }
