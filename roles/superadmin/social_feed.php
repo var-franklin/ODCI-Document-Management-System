@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/css/navbar.css">
     <link rel="stylesheet" href="assets/css/social_feed.css">
-    <link rel="stylesheet" href="assets/css/style.css">
+    <!-- <link rel="stylesheet" href="assets/css/style.css"> -->
 </head>
 
 <body>
@@ -25,13 +25,19 @@
 
         <!-- Main Content -->
         <main>
-            <div class="feed-container">
-                <!-- Feed Header -->
-                <div class="feed-header">
-                    <h2><i class='bx bx-news'></i> Social Feed</h2>
-                    <p>Connect, share, and collaborate with your colleagues</p>
-                </div>
 
+            <div class="head-title">
+                <div class="left">
+                    <h1>Social Feed</h1>
+                    <ul class="breadcrumb">
+                        <li><a href="#">Dashboard</a></li>
+                        <li><i class='bx bx-chevron-right'></i></li>
+                        <li><a class="active" href="#">Overview</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feed-container">
                 <!-- Feed Tabs -->
                 <div class="feed-tabs">
                     <button class="feed-tab active" data-filter="all">

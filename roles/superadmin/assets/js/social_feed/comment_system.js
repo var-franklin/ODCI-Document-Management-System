@@ -20,7 +20,7 @@ class CommentSystem {
         }
     }
 
-    // Load comments for a post
+    // Load comments for a post - FIXED: Don't update count when just loading
     async loadComments(postId) {
         const loadingDiv = document.getElementById(`commentsLoading${postId}`);
         const container = document.getElementById(`commentsContainer${postId}`);
@@ -45,8 +45,8 @@ class CommentSystem {
             
             if (data.success && container) {
                 this.renderComments(container, data.comments);
-                // FIXED: Update count with actual server count
-                this.updateCommentCountFromServer(postId, data.total_comments);
+                // FIXED: Don't update count when just loading comments for display
+                // Only update count when we actually modify comments (add/delete)
             } else {
                 this.showCommentsError(container, data.message || 'Failed to load comments');
             }
@@ -129,7 +129,6 @@ class CommentSystem {
         return actions.join('');
     }
 
-    // FIXED: Add new comment without manual count increment
     async addComment(postId) {
         const input = document.querySelector(`#comments${postId} .comment-input`);
         if (!input) {
@@ -180,8 +179,13 @@ class CommentSystem {
             
             if (result.success) {
                 input.value = '';
-                // FIXED: Just reload comments - this will update the count correctly
                 await this.loadComments(postId);
+                // Always get the latest count from the server
+                const countResponse = await fetch(`api/get_comments.php?post_id=${postId}`);
+                const countData = await countResponse.json();
+                if (countData.success) {
+                    this.updateCommentCountFromServer(postId, countData.total_comments);
+                }
                 this.showNotification(result.message || 'Comment added successfully!', 'success');
             } else {
                 throw new Error(result.message || 'Failed to add comment');
@@ -190,7 +194,6 @@ class CommentSystem {
             console.error('Error adding comment:', error);
             this.showNotification(error.message || 'Error adding comment', 'error');
         } finally {
-            // Restore button state
             if (addButton) {
                 addButton.textContent = originalText || 'Post';
                 addButton.disabled = false;
@@ -198,7 +201,6 @@ class CommentSystem {
         }
     }
 
-    // FIXED: Use server count instead of incrementing
     updateCommentCountFromServer(postId, serverCount) {
         const postElement = document.querySelector(`[data-post-id="${postId}"]`);
         if (!postElement) return;
@@ -207,15 +209,14 @@ class CommentSystem {
         if (!statsDiv) return;
 
         let commentCountElement = null;
-        
-        // Find existing comment count element
         const spans = statsDiv.querySelectorAll('span');
         spans.forEach(span => {
             if (span.innerHTML.includes('bx-message')) {
                 commentCountElement = span;
             }
         });
-        
+
+        // Always set to server count
         if (commentCountElement) {
             commentCountElement.innerHTML = `<i class='bx bx-message'></i> ${serverCount}`;
         } else if (serverCount > 0) {
