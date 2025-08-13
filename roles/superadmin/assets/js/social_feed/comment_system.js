@@ -1,5 +1,4 @@
-// Simple fix for comment count issue
-// Only modify the addComment function to not increment count
+// comment_system.js - Complete fixed version
 
 class CommentSystem {
     constructor(core) {
@@ -129,78 +128,101 @@ class CommentSystem {
         return actions.join('');
     }
 
+    // FIXED: Add comment with proper count management
     async addComment(postId) {
-        const input = document.querySelector(`#comments${postId} .comment-input`);
-        if (!input) {
-            console.error('Comment input not found for post:', postId);
-            return;
-        }
-        
-        const content = input.value.trim();
-        if (!content) {
-            this.showNotification('Please enter a comment', 'warning');
-            return;
-        }
-        
-        // Show loading state
-        const addButton = input.parentElement.querySelector('.add-comment-btn');
-        const originalText = addButton ? addButton.textContent : '';
-        if (addButton) {
-            addButton.textContent = 'Adding...';
-            addButton.disabled = true;
-        }
-        
-        try {
-            const response = await fetch('api/add_comment.php', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    post_id: postId, 
-                    content: content 
-                })
-            });
-            
-            const responseText = await response.text();
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${responseText}`);
+            const input = document.querySelector(`#comments${postId} .comment-input`);
+            if (!input) {
+                console.error('Comment input not found for post:', postId);
+                return;
             }
             
-            let result;
+            const content = input.value.trim();
+            if (!content) {
+                this.showNotification('Please enter a comment', 'warning');
+                return;
+            }
+            
+            // Show loading state
+            const addButton = input.parentElement.querySelector('.add-comment-btn');
+            const originalText = addButton ? addButton.textContent : '';
+            if (addButton) {
+                addButton.textContent = 'Adding...';
+                addButton.disabled = true;
+            }
+            
             try {
-                result = JSON.parse(responseText);
-            } catch (parseError) {
-                console.error('JSON Parse Error:', parseError);
-                throw new Error(`Invalid JSON response`);
-            }
-            
-            if (result.success) {
-                input.value = '';
-                await this.loadComments(postId);
-                // Always get the latest count from the server
-                const countResponse = await fetch(`api/get_comments.php?post_id=${postId}`);
-                const countData = await countResponse.json();
-                if (countData.success) {
-                    this.updateCommentCountFromServer(postId, countData.total_comments);
+                const response = await fetch('api/add_comment.php', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        post_id: postId, 
+                        content: content 
+                    })
+                });
+                
+                const responseText = await response.text();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${responseText}`);
                 }
-                this.showNotification(result.message || 'Comment added successfully!', 'success');
-            } else {
-                throw new Error(result.message || 'Failed to add comment');
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (parseError) {
+                    console.error('JSON Parse Error:', parseError);
+                    throw new Error(`Invalid JSON response`);
+                }
+                
+                if (result.success) {
+                    input.value = '';
+                    
+                    // FIXED: Use the actual count returned by the server
+                    if (result.actual_comment_count !== undefined) {
+                        this.updateCommentCountFromServer(postId, result.actual_comment_count);
+                    }
+                    
+                    // Reload comments to show the new comment
+                    await this.loadComments(postId);
+                    
+                    this.showNotification(result.message || 'Comment added successfully!', 'success');
+                } else {
+                    throw new Error(result.message || 'Failed to add comment');
+                }
+            } catch (error) {
+                console.error('Error adding comment:', error);
+                this.showNotification(error.message || 'Error adding comment', 'error');
+            } finally {
+                if (addButton) {
+                    addButton.textContent = originalText || 'Post';
+                    addButton.disabled = false;
+                }
+            }
+        }
+
+    // Helper function to load comments and update count in one go
+    async loadCommentsAndUpdateCount(postId) {
+        try {
+            const response = await fetch(`api/get_comments.php?post_id=${postId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const container = document.getElementById(`commentsContainer${postId}`);
+                if (container) {
+                    this.renderComments(container, data.comments);
+                }
+                // Update count from the same response
+                this.updateCommentCountFromServer(postId, data.total_comments);
             }
         } catch (error) {
-            console.error('Error adding comment:', error);
-            this.showNotification(error.message || 'Error adding comment', 'error');
-        } finally {
-            if (addButton) {
-                addButton.textContent = originalText || 'Post';
-                addButton.disabled = false;
-            }
+            console.error('Error loading comments and updating count:', error);
         }
     }
 
+    // Update comment count from server response
     updateCommentCountFromServer(postId, serverCount) {
         const postElement = document.querySelector(`[data-post-id="${postId}"]`);
         if (!postElement) return;

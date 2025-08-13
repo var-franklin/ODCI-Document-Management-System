@@ -16,18 +16,22 @@ try {
     $postId = intval($input['post_id'] ?? 0);
     $content = trim($input['content'] ?? '');
     $parentCommentId = intval($input['parent_comment_id'] ?? 0) ?: null;
+    
     if (!$postId || empty($content)) {
         echo json_encode(['success' => false, 'message' => 'Post ID and content are required']);
         exit;
     }
+    
     // Verify post exists
     $stmt = $pdo->prepare("SELECT user_id FROM posts WHERE id = ? AND is_deleted = 0");
     $stmt->execute([$postId]);
     $post = $stmt->fetch();
+    
     if (!$post) {
         echo json_encode(['success' => false, 'message' => 'Post not found']);
         exit;
     }
+    
     // Create comment
     $stmt = $pdo->prepare("
         INSERT INTO post_comments (post_id, user_id, parent_comment_id, content) 
@@ -39,19 +43,22 @@ try {
     if ($result) {
         $commentId = $pdo->lastInsertId();
 
-        // Update post comment count
-        $stmt = $pdo->prepare("UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?");
-        $stmt->execute([$postId]);
+        // REMOVED: Don't manually increment comment_count
+        // Let the database calculate it dynamically from actual comments
+        // $stmt = $pdo->prepare("UPDATE posts SET comment_count = comment_count + 1 WHERE id = ?");
+        // $stmt->execute([$postId]);
 
         // Log activity
         logActivity($pdo, $userId, 'add_comment', 'comment', $commentId, 'Added comment to post', [
             'post_id' => $postId,
             'parent_comment_id' => $parentCommentId
         ]);
+        
         // Send notification to post author (if not commenting on own post)
         if ($post['user_id'] != $userId) {
             sendCommentNotification($pdo, $postId, $commentId, $userId, $post['user_id']);
         }
+        
         // If replying to a comment, notify the parent comment author
         if ($parentCommentId) {
             $stmt = $pdo->prepare("SELECT user_id FROM post_comments WHERE id = ?");
@@ -61,10 +68,18 @@ try {
                 sendReplyNotification($pdo, $postId, $commentId, $userId, $parentComment['user_id']);
             }
         }
+        
+        // Get the actual current comment count
+        $stmt = $pdo->prepare("SELECT COUNT(*) as actual_count FROM post_comments WHERE post_id = ? AND is_deleted = 0");
+        $stmt->execute([$postId]);
+        $countResult = $stmt->fetch();
+        $actualCount = $countResult['actual_count'];
+        
         echo json_encode([
             'success' => true,
             'message' => 'Comment added successfully',
-            'comment_id' => $commentId
+            'comment_id' => $commentId,
+            'actual_comment_count' => $actualCount
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to add comment']);
