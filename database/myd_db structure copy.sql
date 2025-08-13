@@ -3,6 +3,71 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 -- Database: `myd_db`
+
+DELIMITER $$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_cleanup_expired_shares` ()   BEGIN
+    UPDATE file_shares 
+    SET is_active = 0 
+    WHERE expires_at < NOW() AND is_active = 1;
+    
+    SELECT ROW_COUNT() as expired_shares_count;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_folder_stats` (IN `folder_id` INT)   BEGIN
+    SELECT 
+        COUNT(f.id) as file_count,
+        COALESCE(SUM(f.file_size), 0) as total_size,
+        COUNT(DISTINCT f.file_type) as file_types_count,
+        MAX(f.uploaded_at) as last_upload
+    FROM files f
+    WHERE f.folder_id = folder_id AND f.is_deleted = 0;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_user_activity` (IN `user_id` INT, IN `days_back` INT)   BEGIN
+    SELECT 
+        action,
+        resource_type,
+        COUNT(*) as action_count,
+        MAX(created_at) as last_action
+    FROM activity_logs
+    WHERE user_id = user_id 
+    AND created_at >= DATE_SUB(NOW(), INTERVAL days_back DAY)
+    GROUP BY action, resource_type
+    ORDER BY action_count DESC;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_update_folder_stats` (IN `folder_id` INT)   BEGIN
+    UPDATE folders f
+    SET 
+        file_count = (
+            SELECT COUNT(*) 
+            FROM files 
+            WHERE folder_id = f.id AND is_deleted = 0
+        ),
+        folder_size = (
+            SELECT COALESCE(SUM(file_size), 0) 
+            FROM files 
+            WHERE folder_id = f.id AND is_deleted = 0
+        )
+    WHERE f.id = folder_id;
+END$$
+
+-- Functions
+CREATE DEFINER=`root`@`localhost` FUNCTION `fn_generate_share_token` () RETURNS VARCHAR(255) CHARSET utf8mb4 COLLATE utf8mb4_general_ci DETERMINISTIC READS SQL DATA BEGIN
+    DECLARE token VARCHAR(255);
+    DECLARE token_exists INT DEFAULT 1;
+    
+    WHILE token_exists > 0 DO
+        SET token = CONCAT('share_', MD5(CONCAT(NOW(), RAND())));
+        SELECT COUNT(*) INTO token_exists FROM file_shares WHERE share_token = token;
+    END WHILE;
+    
+    RETURN token;
+END$$
+
+DELIMITER ;
+
 -- Table structure for table `activity_logs`
 CREATE TABLE `activity_logs` (
   `id` int(11) NOT NULL,
@@ -56,6 +121,19 @@ CREATE TABLE `announcement_views` (
   `user_agent` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Triggers `announcement_views`
+DELIMITER $$
+CREATE TRIGGER `tr_announcement_view_insert` AFTER INSERT ON `announcement_views` FOR EACH ROW BEGIN
+    UPDATE announcements 
+    SET view_count = (
+        SELECT COUNT(*) FROM announcement_views 
+        WHERE announcement_id = NEW.announcement_id
+    )
+    WHERE id = NEW.announcement_id;
+END
+$$
+DELIMITER ;
+
 -- Table structure for table `departments`
 CREATE TABLE `departments` (
   `id` int(11) NOT NULL,
@@ -102,6 +180,31 @@ CREATE TABLE `files` (
   `is_favorite` tinyint(1) DEFAULT 0,
   `expiry_date` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Triggers `files`
+DELIMITER $$
+CREATE TRIGGER `tr_file_insert_log` AFTER INSERT ON `files` FOR EACH ROW BEGIN
+    INSERT INTO activity_logs (user_id, action, resource_type, resource_id, description, metadata)
+    VALUES (NEW.uploaded_by, 'upload_file', 'file', NEW.id, 
+            CONCAT('Uploaded file: ', NEW.original_name),
+            JSON_OBJECT('file_size', NEW.file_size, 'file_type', NEW.file_type));
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `tr_file_insert_update_folder` AFTER INSERT ON `files` FOR EACH ROW BEGIN
+    CALL sp_update_folder_stats(NEW.folder_id);
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `tr_file_update_folder_stats` AFTER UPDATE ON `files` FOR EACH ROW BEGIN
+    IF OLD.is_deleted != NEW.is_deleted THEN
+        CALL sp_update_folder_stats(NEW.folder_id);
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- Table structure for table `file_comments`
 CREATE TABLE `file_comments` (
@@ -227,6 +330,32 @@ CREATE TABLE `post_comments` (
   `like_count` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Triggers `post_comments`
+DELIMITER $$
+CREATE TRIGGER `tr_post_comment_insert` AFTER INSERT ON `post_comments` FOR EACH ROW BEGIN
+    UPDATE posts 
+    SET comment_count = (
+        SELECT COUNT(*) FROM post_comments 
+        WHERE post_id = NEW.post_id AND is_deleted = 0
+    )
+    WHERE id = NEW.post_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `tr_post_comment_update` AFTER UPDATE ON `post_comments` FOR EACH ROW BEGIN
+    IF OLD.is_deleted != NEW.is_deleted THEN
+        UPDATE posts 
+        SET comment_count = (
+            SELECT COUNT(*) FROM post_comments 
+            WHERE post_id = NEW.post_id AND is_deleted = 0
+        )
+        WHERE id = NEW.post_id;
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- Table structure for table `post_likes`
 CREATE TABLE `post_likes` (
   `id` int(11) NOT NULL,
@@ -236,6 +365,48 @@ CREATE TABLE `post_likes` (
   `reaction_type` enum('like','love','laugh','angry','sad','wow') DEFAULT 'like',
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Triggers `post_likes`
+DELIMITER $$
+CREATE TRIGGER `tr_post_like_delete` AFTER DELETE ON `post_likes` FOR EACH ROW BEGIN
+    IF OLD.post_id IS NOT NULL THEN
+        UPDATE posts 
+        SET like_count = (
+            SELECT COUNT(*) FROM post_likes 
+            WHERE post_id = OLD.post_id
+        )
+        WHERE id = OLD.post_id;
+    ELSEIF OLD.comment_id IS NOT NULL THEN
+        UPDATE post_comments 
+        SET like_count = (
+            SELECT COUNT(*) FROM post_likes 
+            WHERE comment_id = OLD.comment_id
+        )
+        WHERE id = OLD.comment_id;
+    END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `tr_post_like_insert` AFTER INSERT ON `post_likes` FOR EACH ROW BEGIN
+    IF NEW.post_id IS NOT NULL THEN
+        UPDATE posts 
+        SET like_count = (
+            SELECT COUNT(*) FROM post_likes 
+            WHERE post_id = NEW.post_id
+        )
+        WHERE id = NEW.post_id;
+    ELSEIF NEW.comment_id IS NOT NULL THEN
+        UPDATE post_comments 
+        SET like_count = (
+            SELECT COUNT(*) FROM post_likes 
+            WHERE comment_id = NEW.comment_id
+        )
+        WHERE id = NEW.comment_id;
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- Table structure for table `post_media`
 CREATE TABLE `post_media` (
@@ -281,6 +452,19 @@ CREATE TABLE `post_shares` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Triggers `post_shares`
+DELIMITER $$
+CREATE TRIGGER `tr_post_share_insert` AFTER INSERT ON `post_shares` FOR EACH ROW BEGIN
+    UPDATE posts 
+    SET share_count = (
+        SELECT COUNT(*) FROM post_shares 
+        WHERE post_id = NEW.post_id
+    )
+    WHERE id = NEW.post_id;
+END
+$$
+DELIMITER ;
+
 -- Table structure for table `post_views`
 CREATE TABLE `post_views` (
   `id` int(11) NOT NULL,
@@ -290,6 +474,19 @@ CREATE TABLE `post_views` (
   `ip_address` varchar(45) DEFAULT NULL,
   `user_agent` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Triggers `post_views`
+DELIMITER $$
+CREATE TRIGGER `tr_post_view_insert` AFTER INSERT ON `post_views` FOR EACH ROW BEGIN
+    UPDATE posts 
+    SET view_count = (
+        SELECT COUNT(*) FROM post_views 
+        WHERE post_id = NEW.post_id
+    )
+    WHERE id = NEW.post_id;
+END
+$$
+DELIMITER ;
 
 -- Table structure for table `system_settings`
 CREATE TABLE `system_settings` (
@@ -482,6 +679,33 @@ CREATE TABLE `v_users_detailed` (
 ,`approved_by_username` varchar(50)
 ,`approved_at` datetime
 );
+
+-- Structure for view `v_announcements_detailed`
+DROP TABLE IF EXISTS `v_announcements_detailed`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_announcements_detailed`  AS SELECT `a`.`id` AS `id`, `a`.`title` AS `title`, `a`.`content` AS `content`, `a`.`summary` AS `summary`, `a`.`image_path` AS `image_path`, `a`.`priority` AS `priority`, `a`.`announcement_type` AS `announcement_type`, `a`.`is_published` AS `is_published`, `a`.`published_at` AS `published_at`, `a`.`expires_at` AS `expires_at`, `a`.`view_count` AS `view_count`, `a`.`is_pinned` AS `is_pinned`, `a`.`created_at` AS `created_at`, `creator`.`username` AS `created_by_username`, concat(`creator`.`name`,' ',ifnull(concat(`creator`.`mi`,'. '),''),`creator`.`surname`) AS `creator_full_name` FROM (`announcements` `a` left join `users` `creator` on(`a`.`created_by` = `creator`.`id`)) WHERE `a`.`is_deleted` = 0 ;
+
+-- Structure for view `v_comments_detailed`
+DROP TABLE IF EXISTS `v_comments_detailed`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_comments_detailed`  AS SELECT `c`.`id` AS `id`, `c`.`post_id` AS `post_id`, `c`.`user_id` AS `user_id`, `c`.`parent_comment_id` AS `parent_comment_id`, `c`.`content` AS `content`, `c`.`is_edited` AS `is_edited`, `c`.`edited_at` AS `edited_at`, `c`.`is_deleted` AS `is_deleted`, `c`.`deleted_at` AS `deleted_at`, `c`.`deleted_by` AS `deleted_by`, `c`.`created_at` AS `created_at`, `c`.`updated_at` AS `updated_at`, `c`.`like_count` AS `like_count`, `u`.`username` AS `username`, `u`.`name` AS `name`, `u`.`mi` AS `mi`, `u`.`surname` AS `surname`, concat(`u`.`name`,' ',ifnull(concat(`u`.`mi`,'. '),''),`u`.`surname`) AS `commenter_full_name`, `u`.`profile_image` AS `profile_image`, `u`.`position` AS `position`, `d`.`department_code` AS `department_code`, `deleter`.`username` AS `deleted_by_username` FROM (((`post_comments` `c` left join `users` `u` on(`c`.`user_id` = `u`.`id`)) left join `departments` `d` on(`u`.`department_id` = `d`.`id`)) left join `users` `deleter` on(`c`.`deleted_by` = `deleter`.`id`)) ;
+
+-- Structure for view `v_files_detailed`
+DROP TABLE IF EXISTS `v_files_detailed`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_files_detailed`  AS SELECT `f`.`id` AS `id`, `f`.`original_name` AS `original_name`, `f`.`file_name` AS `file_name`, `f`.`file_size` AS `file_size`, `f`.`file_type` AS `file_type`, `f`.`mime_type` AS `mime_type`, `f`.`file_extension` AS `file_extension`, `f`.`uploaded_at` AS `uploaded_at`, `f`.`download_count` AS `download_count`, `f`.`is_deleted` AS `is_deleted`, `folder`.`folder_name` AS `folder_name`, `folder`.`folder_path` AS `folder_path`, `uploader`.`username` AS `uploaded_by_username`, concat(`uploader`.`name`,' ',ifnull(concat(`uploader`.`mi`,'. '),''),`uploader`.`surname`) AS `uploader_full_name`, `dept`.`department_code` AS `folder_department` FROM (((`files` `f` left join `folders` `folder` on(`f`.`folder_id` = `folder`.`id`)) left join `users` `uploader` on(`f`.`uploaded_by` = `uploader`.`id`)) left join `departments` `dept` on(`folder`.`department_id` = `dept`.`id`)) ;
+
+-- Structure for view `v_folders_hierarchy`
+DROP TABLE IF EXISTS `v_folders_hierarchy`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_folders_hierarchy`  AS SELECT `f`.`id` AS `id`, `f`.`folder_name` AS `folder_name`, `f`.`folder_path` AS `folder_path`, `f`.`folder_level` AS `folder_level`, `f`.`is_public` AS `is_public`, `f`.`folder_color` AS `folder_color`, `f`.`folder_icon` AS `folder_icon`, `f`.`file_count` AS `file_count`, `f`.`folder_size` AS `folder_size`, `f`.`created_at` AS `created_at`, `parent`.`folder_name` AS `parent_folder_name`, `creator`.`username` AS `created_by_username`, concat(`creator`.`name`,' ',ifnull(concat(`creator`.`mi`,'. '),''),`creator`.`surname`) AS `creator_full_name`, `dept`.`department_code` AS `department_code`, `dept`.`department_name` AS `department_name` FROM (((`folders` `f` left join `folders` `parent` on(`f`.`parent_id` = `parent`.`id`)) left join `users` `creator` on(`f`.`created_by` = `creator`.`id`)) left join `departments` `dept` on(`f`.`department_id` = `dept`.`id`)) WHERE `f`.`is_deleted` = 0 ;
+
+-- Structure for view `v_posts_detailed`
+DROP TABLE IF EXISTS `v_posts_detailed`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_posts_detailed`  AS SELECT `p`.`id` AS `id`, `p`.`user_id` AS `user_id`, `p`.`content` AS `content`, `p`.`content_type` AS `content_type`, `p`.`visibility` AS `visibility`, `p`.`target_departments` AS `target_departments`, `p`.`target_users` AS `target_users`, `p`.`priority` AS `priority`, `p`.`is_pinned` AS `is_pinned`, `p`.`is_edited` AS `is_edited`, `p`.`edited_at` AS `edited_at`, `p`.`is_deleted` AS `is_deleted`, `p`.`deleted_at` AS `deleted_at`, `p`.`deleted_by` AS `deleted_by`, `p`.`created_at` AS `created_at`, `p`.`updated_at` AS `updated_at`, `p`.`like_count` AS `like_count`, `p`.`comment_count` AS `comment_count`, `p`.`view_count` AS `view_count`, `p`.`share_count` AS `share_count`, `u`.`username` AS `username`, `u`.`name` AS `name`, `u`.`mi` AS `mi`, `u`.`surname` AS `surname`, concat(`u`.`name`,' ',ifnull(concat(`u`.`mi`,'. '),''),`u`.`surname`) AS `author_full_name`, `u`.`profile_image` AS `profile_image`, `u`.`position` AS `position`, `d`.`department_code` AS `department_code`, `d`.`department_name` AS `department_name`, `deleter`.`username` AS `deleted_by_username` FROM (((`posts` `p` left join `users` `u` on(`p`.`user_id` = `u`.`id`)) left join `departments` `d` on(`u`.`department_id` = `d`.`id`)) left join `users` `deleter` on(`p`.`deleted_by` = `deleter`.`id`)) ;
+
+-- Structure for view `v_users_detailed`
+DROP TABLE IF EXISTS `v_users_detailed`;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_users_detailed`  AS SELECT `u`.`id` AS `id`, `u`.`username` AS `username`, `u`.`email` AS `email`, `u`.`role` AS `role`, `u`.`is_approved` AS `is_approved`, `u`.`name` AS `name`, `u`.`mi` AS `mi`, `u`.`surname` AS `surname`, concat(`u`.`name`,' ',ifnull(concat(`u`.`mi`,'. '),''),`u`.`surname`) AS `full_name`, `u`.`employee_id` AS `employee_id`, `u`.`position` AS `position`, `u`.`is_restricted` AS `is_restricted`, `u`.`last_login` AS `last_login`, `u`.`created_at` AS `created_at`, `d`.`department_code` AS `department_code`, `d`.`department_name` AS `department_name`, `approver`.`username` AS `approved_by_username`, `u`.`approved_at` AS `approved_at` FROM ((`users` `u` left join `departments` `d` on(`u`.`department_id` = `d`.`id`)) left join `users` `approver` on(`u`.`approved_by` = `approver`.`id`)) ;
+
+
+-- Indexes for dumped tables
 
 -- Indexes for table `activity_logs`
 ALTER TABLE `activity_logs`

@@ -796,3 +796,71 @@ select.form-input {
         right: calc(-50% + 13px);
     }
 }
+
+
+
+
+
+
+
+
+/* Google OAuth Button Styles */
+.google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    height: 48px;
+    background: #ffffff;
+    color: #3c4043;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 2px solid #dadce0;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.google-btn:hover {
+    background: #f8f9fa;
+    border-color: #dadce0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.google-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.google-icon {
+    flex-shrink: 0;
+}
+
+.google-btn span {
+    color: #3c4043;
+    font-weight: 500;
+}
+
+/* Divider spacing adjustment when Google button is present */
+.google-btn + .divider {
+    margin-top: 16px;
+    margin-bottom: 20px;
+}
+
+/* Responsive adjustments for Google button */
+@media (max-width: 480px) {
+    .google-btn {
+        height: 44px;
+        font-size: 13px;
+        gap: 10px;
+    }
+    
+    .google-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
