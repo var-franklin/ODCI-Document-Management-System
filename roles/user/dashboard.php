@@ -1,3 +1,5 @@
+<!-- File path: roles/user/dashboard.php -->
+
 <?php
 require_once '../../includes/config.php';
 

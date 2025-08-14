@@ -154,10 +154,10 @@ if (searchButton && searchButtonIcon && searchForm) {
 }
 
 // Handle dark mode toggle
-const switchMode = document.getElementById('switch-mode');
+const switchModeToggle = document.getElementById('switch-mode');
 
-if (switchMode) {
-    switchMode.addEventListener('change', function () {
+if (switchModeToggle) {
+    switchModeToggle.addEventListener('change', function () {
         if(this.checked) {
             document.body.classList.add('dark');
         } else {

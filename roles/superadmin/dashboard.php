@@ -1,3 +1,5 @@
+<!-- file path: roles/superadmin/dashboard.php -->
+
 <?php include 'assets/script/dashboard-script.php'; ?>
 
 <!DOCTYPE html>

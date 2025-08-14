@@ -43,12 +43,7 @@ try {
     $result = GoogleOAuth::handleGoogleUser($pdo, $userInfo);
     
     if ($result['success']) {
-        if (isset($result['redirect'])) {
-            header('Location: ' . $result['redirect']);
-        } else {
-            // Successful login - redirect to dashboard
-            header('Location: ../../../../roles/user/dashboard.php');
-        }
+        header('Location: /ODCI/roles/user/dashboard.php');
         exit();
     } else {
         header('Location: ../login.php?error=' . urlencode($result['message']));

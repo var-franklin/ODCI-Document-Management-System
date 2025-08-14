@@ -144,7 +144,7 @@ class GoogleOAuth {
                 return [
                     'success' => true, 
                     'message' => 'Account created successfully! Please wait for admin approval.',
-                    'redirect' => '../login.php?success=' . urlencode('Account created! Please wait for approval.')
+                    'redirect' => '../../login.php?success=' . urlencode('Account created! Please wait for approval.')
                 ];
             }
             
