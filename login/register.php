@@ -98,9 +98,6 @@
                             <i class='bx bx-lock-alt input-icon'></i>
                             <input type="password" id="password" name="password" class="form-input"
                                 placeholder="Create a strong password" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
-                                <i class='bx bx-hide' id="password-icon"></i>
-                            </button>
                         </div>
                         <div class="field-error" id="password-error">Password is required</div>
                         <!-- Password strength indicator stays here -->
@@ -121,9 +118,6 @@
                             <i class='bx bx-lock-alt input-icon'></i>
                             <input type="password" id="confirm_password" name="confirm_password" class="form-input"
                                 placeholder="Confirm your password" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')">
-                                <i class='bx bx-hide' id="confirm_password-icon"></i>
-                            </button>
                         </div>
                         <div class="field-error" id="confirm_password-error">Please confirm your password</div>
                     </div>

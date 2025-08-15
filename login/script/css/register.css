@@ -540,28 +540,6 @@ select.form-input {
     color: #28a745;
 }
 
-/* Password Toggle */
-.password-toggle {
-    position: absolute;
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 18px;
-    transition: all 0.2s ease;
-    z-index: 2;
-}
-
-.password-toggle:hover {
-    color: #6b7280;
-    background-color: #f3f4f6;
-}
-
 /* Field Errors */
 .field-error {
     font-size: 12px;
