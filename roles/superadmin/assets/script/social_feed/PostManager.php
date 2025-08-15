@@ -183,43 +183,6 @@ class PostManager
     }
 
     /**
-     * Get trending posts (most liked/commented in last 7 days)
-     */
-    public static function getTrendingPosts($pdo, $userId, $departmentId, $limit = 10)
-    {
-        try {
-            $query = "
-                SELECT p.*, u.username, u.name, u.mi, u.surname,
-                       CONCAT(u.name, ' ', IFNULL(CONCAT(u.mi, '. '), ''), u.surname) as author_full_name,
-                       u.profile_image, u.position, d.department_code,
-                       (p.like_count * 2 + p.comment_count * 3 + p.view_count * 0.1) as engagement_score,
-                       EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) as user_liked
-                FROM posts p
-                LEFT JOIN users u ON p.user_id = u.id
-                LEFT JOIN departments d ON u.department_id = d.id
-                WHERE p.is_deleted = 0
-                AND p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                AND (
-                    p.visibility = 'public' OR
-                    p.user_id = ? OR
-                    (p.visibility = 'department' AND JSON_CONTAINS(p.target_departments, CAST(? AS JSON))) OR
-                    (p.visibility = 'custom' AND JSON_CONTAINS(p.target_users, CAST(? AS JSON)))
-                )
-                ORDER BY engagement_score DESC, p.created_at DESC
-                LIMIT ?
-            ";
-
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([$userId, $userId, $departmentId, $userId, $limit]);
-
-            return $stmt->fetchAll();
-        } catch (Exception $e) {
-            error_log("Get trending posts error: " . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
      * Mark post as viewed
      */
     public static function markPostAsViewed($pdo, $postId, $userId)

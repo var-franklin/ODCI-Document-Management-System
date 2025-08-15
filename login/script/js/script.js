@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
  * Password toggle functionality - Enhanced for multiple fields
  */
 function togglePassword(fieldId) {
+    if (!fieldId) fieldId = 'password';
+    
     const passwordInput = document.getElementById(fieldId);
     const passwordIcon = document.getElementById(fieldId + '-icon');
     

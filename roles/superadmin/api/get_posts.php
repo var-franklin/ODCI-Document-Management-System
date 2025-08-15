@@ -39,10 +39,6 @@ try {
             $whereConditions[] = "p.is_pinned = 1";
             break;
 
-        case 'trending':
-            $whereConditions[] = "p.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
-            break;
-
         default: // all posts
             $whereConditions[] = "(
                 p.visibility = 'public' OR
@@ -55,19 +51,15 @@ try {
 
     $whereClause = implode(' AND ', $whereConditions);
 
-    // Order by
-    $orderBy = $filter === 'trending'
-        ? "(p.like_count * 2 + p.comment_count * 3 + p.view_count * 0.1) DESC, p.created_at DESC"
-        : "p.is_pinned DESC, p.created_at DESC";
+    // Simple order by - pinned posts first, then by creation date
+    $orderBy = "p.is_pinned DESC, p.created_at DESC";
 
     $query = "
         SELECT p.*, u.username, u.name, u.mi, u.surname,
                CONCAT(u.name, ' ', IFNULL(CONCAT(u.mi, '. '), ''), u.surname) as author_full_name,
                u.profile_image, u.position, u.role, d.department_code, d.department_name,
                EXISTS(SELECT 1 FROM post_likes pl WHERE pl.post_id = p.id AND pl.user_id = ?) as user_liked,
-               -- FIXED: Get actual comment count from database
                (SELECT COUNT(*) FROM post_comments pc WHERE pc.post_id = p.id AND pc.is_deleted = 0) as comment_count,
-               -- FIXED: Get actual view count from post_views table
                (SELECT COUNT(*) FROM post_views pv WHERE pv.post_id = p.id) as view_count
         FROM posts p
         LEFT JOIN users u ON p.user_id = u.id
@@ -89,7 +81,7 @@ try {
         // Get media for each post
         $post['media'] = getPostMedia($pdo, $post['id']);
 
-        // FIXED: Only track view if user hasn't viewed this post before
+        // Track view if user hasn't viewed this post before
         try {
             $viewStmt = $pdo->prepare("
                 INSERT IGNORE INTO post_views (post_id, user_id, viewed_at, ip_address, user_agent) 
@@ -107,9 +99,6 @@ try {
                 error_log("View tracking error for post {$post['id']}: " . $e->getMessage());
             }
         }
-
-        // REMOVED: No longer incrementing view_count manually
-        // The view_count is now calculated from post_views table in the SELECT query above
 
         // Ensure counts are integers
         $post['like_count'] = (int) $post['like_count'];

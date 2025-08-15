@@ -102,10 +102,8 @@
                                 <i class='bx bx-hide' id="password-icon"></i>
                             </button>
                         </div>
-                        <div class="field-error <?php echo isset($errors['password']) ? 'show' : ''; ?>">
-                            <?php echo $errors['password'] ?? 'Password is required'; ?>
-                        </div>
-
+                        <div class="field-error" id="password-error">Password is required</div>
+                        <!-- Password strength indicator stays here -->
                         <div class="password-strength" id="passwordStrength">
                             <div class="strength-header">
                                 <span class="strength-label">Password Strength</span>
@@ -116,7 +114,7 @@
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="form-group">
                         <label for="confirm_password" class="form-label">Confirm Password</label>
                         <div class="input-container">
@@ -127,9 +125,7 @@
                                 <i class='bx bx-hide' id="confirm_password-icon"></i>
                             </button>
                         </div>
-                        <div class="field-error <?php echo isset($errors['confirm_password']) ? 'show' : ''; ?>">
-                            <?php echo $errors['confirm_password'] ?? 'Please confirm your password'; ?>
-                        </div>
+                        <div class="field-error" id="confirm_password-error">Please confirm your password</div>
                     </div>
                 </div>
 
@@ -200,30 +196,6 @@
                 </div>
 
                 <div class="wizard-step" data-step="3">
-                    <div class="form-group">
-                        <label for="employee_id" class="form-label">Employee ID</label>
-                        <div class="input-container">
-                            <i class='bx bx-id-card input-icon'></i>
-                            <input type="text" id="employee_id" name="employee_id" class="form-input"
-                                placeholder="Employee ID"
-                                value="<?php echo htmlspecialchars($_POST['employee_id'] ?? ''); ?>" required>
-                        </div>
-                        <div class="field-error <?php echo isset($errors['employee_id']) ? 'show' : ''; ?>">
-                            <?php echo $errors['employee_id'] ?? 'Employee ID is required'; ?>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="position" class="form-label">Position</label>
-                        <div class="input-container">
-                            <i class='bx bx-briefcase input-icon'></i>
-                            <input type="text" id="position" name="position" class="form-input" placeholder="Position"
-                                value="<?php echo htmlspecialchars($_POST['position'] ?? ''); ?>" required>
-                        </div>
-                        <div class="field-error <?php echo isset($errors['position']) ? 'show' : ''; ?>">
-                            <?php echo $errors['position'] ?? 'Position is required'; ?>
-                        </div>
-                    </div>
 
                     <div class="form-group">
                         <label for="department_id" class="form-label">Department</label>
@@ -242,6 +214,31 @@
                         </div>
                         <div class="field-error <?php echo isset($errors['department_id']) ? 'show' : ''; ?>">
                             <?php echo $errors['department_id'] ?? 'Please select a department'; ?>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="position" class="form-label">Position</label>
+                        <div class="input-container">
+                            <i class='bx bx-briefcase input-icon'></i>
+                            <input type="text" id="position" name="position" class="form-input" placeholder="Position"
+                                value="<?php echo htmlspecialchars($_POST['position'] ?? ''); ?>" required>
+                        </div>
+                        <div class="field-error <?php echo isset($errors['position']) ? 'show' : ''; ?>">
+                            <?php echo $errors['position'] ?? 'Position is required'; ?>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="employee_id" class="form-label">Employee ID</label>
+                        <div class="input-container">
+                            <i class='bx bx-id-card input-icon'></i>
+                            <input type="text" id="employee_id" name="employee_id" class="form-input"
+                                placeholder="Employee ID"
+                                value="<?php echo htmlspecialchars($_POST['employee_id'] ?? ''); ?>" required>
+                        </div>
+                        <div class="field-error <?php echo isset($errors['employee_id']) ? 'show' : ''; ?>">
+                            <?php echo $errors['employee_id'] ?? 'Employee ID is required'; ?>
                         </div>
                     </div>
                 </div>

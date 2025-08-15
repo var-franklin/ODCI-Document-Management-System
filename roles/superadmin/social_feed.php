@@ -47,13 +47,10 @@
                         <i class='bx bx-user'></i> My Posts
                     </button>
                     <button class="feed-tab" data-filter="department">
-                        <i class='bx bx-buildings'></i> Department
+                        <i class='bx bx-buildings'></i> Departments
                     </button>
                     <button class="feed-tab" data-filter="pinned">
                         <i class='bx bx-pin'></i> Pinned
-                    </button>
-                    <button class="feed-tab" data-filter="trending">
-                        <i class='bx bx-trending-up'></i> Trending
                     </button>
                 </div>
 

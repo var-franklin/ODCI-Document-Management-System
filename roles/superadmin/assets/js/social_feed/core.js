@@ -1,4 +1,3 @@
-
 class SocialFeedCore {
     constructor() {
         this.currentFilter = 'all';

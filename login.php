@@ -69,7 +69,7 @@ require_once 'login/script/google_oauth.php';
                     <i class='bx bx-lock-alt input-icon'></i>
                     <input type="password" id="password" name="password" class="form-input"
                         placeholder="Enter your password" required autocomplete="current-password">
-                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
                         <i class='bx bx-hide' id="password-icon"></i>
                     </button>
                 </div>

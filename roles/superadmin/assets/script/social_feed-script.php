@@ -56,14 +56,6 @@ function searchPosts($pdo, $query, $userId, $departmentId, $limit = 20, $offset 
 }
 
 /**
- * Get trending posts
- */
-function getTrendingPosts($pdo, $userId, $departmentId, $limit = 10)
-{
-    return PostManager::getTrendingPosts($pdo, $userId, $departmentId, $limit);
-}
-
-/**
  * Mark post as viewed
  */
 function markPostAsViewed($pdo, $postId, $userId)
