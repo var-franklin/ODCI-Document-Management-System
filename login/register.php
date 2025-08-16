@@ -19,7 +19,6 @@
                 <img src="img/cvsu-logo.png" alt="CVSU Naic Logo" class="logo">
             </div>
 
-
             <div class="header-section">
                 <h1 class="main-title">ODCI Document Management System</h1>
                 <p class="system-name">Registration Portal</p>
@@ -38,9 +37,13 @@
                     <div class="step-number">3</div>
                     <div class="step-label">Employment</div>
                 </div>
+                <div class="progress-step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Complete</div>
+                </div>
             </div>
 
-            <!-- Alert Messages -->
+            <!-- Alert Messages - Only show if not successful -->
             <?php if (isset($error) && $error): ?>
                 <div class="alert alert-error">
                     <i class='bx bx-error-circle alert-icon'></i>
@@ -51,14 +54,8 @@
                 </div>
             <?php endif; ?>
 
-            <?php if (isset($success) && $success): ?>
-                <div class="alert alert-success">
-                    <i class='bx bx-check-circle alert-icon'></i>
-                    <span class="alert-text"><?php echo htmlspecialchars($success); ?></span>
-                    <button type="button" class="alert-close">
-                        <i class='bx bx-x'></i>
-                    </button>
-                </div>
+            <?php if (isset($success) && $success && !isset($_POST['username'])): ?>
+                <!-- Success message will be shown in step 4 instead -->
             <?php endif; ?>
         </div>
 
@@ -190,7 +187,6 @@
                 </div>
 
                 <div class="wizard-step" data-step="3">
-
                     <div class="form-group">
                         <label for="department_id" class="form-label">Department</label>
                         <div class="input-container">
@@ -237,21 +233,36 @@
                     </div>
                 </div>
 
+                <!-- Success Step -->
+                <div class="wizard-step <?php echo (isset($success) && $success) ? 'active' : ''; ?>" data-step="4">
+                    <div class="content-section">
+                        <div class="status-icon">
+                            <i class='bx bx-check-circle'></i>
+                        </div>
+                        <h2 class="status-title">Registration Successful!</h2>
+                        <p class="status-message">
+                            <?php echo isset($success) ? htmlspecialchars($success) : 'Your account has been created successfully. You can now login to access the system.'; ?>
+                        </p>
+                    </div>
+
+                    <div class="redirect-info">
+                        <div class="spinner"></div>
+                        <span>Redirecting to login in <span class="countdown">5</span> seconds...</span>
+                    </div>
+                </div>
+
                 <!-- Navigation Buttons -->
-                <!-- Update the wizard navigation buttons section -->
-                <div class="wizard-navigation">
+                <div class="wizard-navigation" <?php echo (isset($success) && $success) ? 'style="display: none;"' : ''; ?>>
                     <button type="button" class="wizard-btn prev-btn" id="prevBtn" style="display: none;">
                         <i class='bx bx-chevron-left'></i>
                         <span>Previous</span>
                     </button>
 
-                    <!-- Changed class from wizard-btn to wizard-btn next-btn for consistent styling -->
                     <button type="button" class="wizard-btn next-btn" id="nextBtn">
                         <span>Next</span>
                         <i class='bx bx-chevron-right'></i>
                     </button>
 
-                    <!-- Changed class from submit-btn to wizard-btn next-btn for consistent styling -->
                     <button type="submit" class="wizard-btn next-btn" id="submitBtn" style="display: none;">
                         <span class="btn-text">Register</span>
                         <div class="btn-loader" style="display: none;">
@@ -259,23 +270,51 @@
                         </div>
                     </button>
                 </div>
+
+                <!-- Success Navigation -->
+                <div class="wizard-navigation" <?php echo (isset($success) && $success) ? '' : 'style="display: none;"'; ?> id="successNavigation">
+                    <a href="../login.php" class="submit-btn">
+                        <i class='bx bx-log-in'></i>
+                        <span>Go to Login</span>
+                    </a>
+                </div>
             </form>
 
-            <!-- Divider -->
+            <!-- Only show "Already have account" if not successful -->
+            <?php if (!isset($success) || !$success): ?>
             <div class="divider">
                 <span class="divider-text">Already have an account?</span>
             </div>
 
-            <!-- Login Link -->
             <a href="../login.php" class="register-link">
                 <i class='bx bx-log-in'></i>
                 <span>Sign In</span>
             </a>
+            <?php endif; ?>
         </div>
     </div>
 
     <!-- JavaScript Files -->
     <script src="script/js/script.js"></script>
+    
+    <!-- Auto-redirect script for success -->
+    <?php if (isset($success) && $success): ?>
+    <script>
+        // Auto redirect after 5 seconds
+        let countdown = 10;
+        const countdownElement = document.querySelector('.countdown');
+        const timer = setInterval(() => {
+            countdown--;
+            if (countdownElement) {
+                countdownElement.textContent = countdown;
+            }
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = '../login.php';
+            }
+        }, 1000);
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

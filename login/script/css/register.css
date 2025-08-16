@@ -799,3 +799,144 @@ select.form-input {
 
 
 
+/* Success Step Styles - Add this to the existing register.css */
+
+/* Content Section for Success Step */
+.content-section {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.status-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 16px;
+}
+
+.status-icon i {
+    display: block;
+}
+
+.status-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.status-message {
+    color: #6b7280;
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Redirect Info */
+.redirect-info {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+}
+
+.countdown {
+    font-weight: 600;
+    color: #28a745;
+}
+
+/* Spinner for redirect */
+.redirect-info .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #28a745;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Success Navigation Button */
+#successNavigation .submit-btn {
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+#successNavigation .submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+#successNavigation .submit-btn:active {
+    transform: translateY(0);
+}
+
+#successNavigation .submit-btn i {
+    font-size: 18px;
+}
+
+/* Responsive Design for Success Step */
+@media (max-width: 768px) {
+    .status-title {
+        font-size: 22px;
+    }
+    
+    .status-message {
+        font-size: 15px;
+    }
+    
+    .status-icon {
+        font-size: 3.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-title {
+        font-size: 20px;
+    }
+    
+    .status-message {
+        font-size: 14px;
+    }
+    
+    .status-icon {
+        font-size: 3rem;
+    }
+    
+    #successNavigation .submit-btn {
+        height: 44px;
+        font-size: 15px;
+    }
+    
+    .redirect-info {
+        padding: 14px;
+        font-size: 13px;
+    }
+}

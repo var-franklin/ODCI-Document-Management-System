@@ -185,7 +185,7 @@ function initializeRegistrationValidation() {
 }
 
 /**
- * Initialize wizard functionality
+ * Initialize wizard functionality - Updated for 4 steps
  */
 function initializeWizard() {
     const wizardSteps = document.querySelectorAll('.wizard-step');
@@ -196,8 +196,24 @@ function initializeWizard() {
     
     if (!wizardSteps.length || !progressSteps.length) return;
     
+    // Check if we're on success step (step 4)
+    const successStep = document.querySelector('.wizard-step[data-step="4"]');
+    if (successStep && successStep.classList.contains('active')) {
+        // Hide all other steps first
+        wizardSteps.forEach(step => {
+            if (step.getAttribute('data-step') !== '4') {
+                step.classList.remove('active');
+            }
+        });
+        // If success step is active, update progress and hide navigation
+        updateProgressForSuccess();
+        // Hide the sign-in section on success
+        toggleSignInSection(4);
+        return;
+    }
+    
     let currentStep = 1;
-    const totalSteps = wizardSteps.length;
+    const totalSteps = 3; // Only count the form steps (1-3), step 4 is success
     
     // Next button handler
     if (nextBtn) {
@@ -258,7 +274,23 @@ function initializeWizard() {
             if (submitBtn) submitBtn.style.display = 'none';
         }
         
+        // Show/hide "Already have an account" section
+        toggleSignInSection(stepNumber);
+        
         currentStep = stepNumber;
+    }
+    
+    function updateProgressForSuccess() {
+        // Mark all steps as completed when on success step
+        progressSteps.forEach((step, index) => {
+            if (index < 3) { // Steps 1-3
+                step.classList.add('completed');
+                step.classList.remove('active');
+            } else if (index === 3) { // Step 4 (success)
+                step.classList.add('active');
+                step.classList.remove('completed');
+            }
+        });
     }
     
     function validateCurrentStep(stepNumber) {
@@ -307,6 +339,24 @@ function initializeWizard() {
         });
         
         return isValid;
+    }
+}
+
+/**
+ * Show/hide the "Already have an account?" section based on current step
+ */
+function toggleSignInSection(stepNumber) {
+    const divider = document.querySelector('.divider');
+    const registerLink = document.querySelector('.register-link');
+    
+    if (divider && registerLink) {
+        if (stepNumber === 1) {
+            divider.style.display = 'block';
+            registerLink.style.display = 'flex';
+        } else {
+            divider.style.display = 'none';
+            registerLink.style.display = 'none';
+        }
     }
 }
 
@@ -485,6 +535,9 @@ function validateAllSteps() {
     
     wizardSteps.forEach((step, index) => {
         const stepNumber = index + 1;
+        // Only validate steps 1-3, skip step 4 (success step)
+        if (stepNumber > 3) return;
+        
         const requiredInputs = step.querySelectorAll('input[required], select[required]');
         
         requiredInputs.forEach(input => {
