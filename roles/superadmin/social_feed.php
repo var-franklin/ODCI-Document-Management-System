@@ -11,10 +11,10 @@
     <link rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/css/navbar.css">
     <link rel="stylesheet" href="assets/css/social_feed.css">
-    <!-- <link rel="stylesheet" href="assets/css/style.css"> -->
 </head>
 
 <body>
+    
     <!-- Sidebar Component -->
     <?php include 'components/sidebar.html'; ?>
 
