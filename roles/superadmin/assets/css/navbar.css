@@ -1,31 +1,35 @@
-/* Navbar Component Styles */
+/* Navbar Component Styles - Green Theme */
 
 /* Import required fonts */
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Navbar CSS Variables - Self-contained */
+/* Navbar CSS Variables - Green Theme */
 :root {
     --navbar-poppins: 'Poppins', sans-serif;
     --navbar-lato: 'Lato', sans-serif;
-    --navbar-light: #F9F9F9;
-    --navbar-blue: #3C91E6;
-    --navbar-grey: #eee;
+    --navbar-background: #04500f; /* Green background */
+    --navbar-light: #ffffff; /* White text and elements */
+    --navbar-green: #ffffff; /* White for contrast */
+    --navbar-grey: rgba(255, 255, 255, 0.2); /* Transparent white for inputs */
     --navbar-dark-grey: #AAAAAA;
-    --navbar-dark: #342E37;
-    --navbar-red: #DB504A;
+    --navbar-dark: #ffffff; /* White text */
+    --navbar-red: #ff6b6b; /* Light red for notifications */
+    --navbar-blue: #1e7e34; /* Darker green for accents */
+    --navbar-hover: rgba(255, 255, 255, 0.1); /* White hover overlay */
 }
 
 /* Dark mode overrides for navbar */
 body.dark {
-    --navbar-light: #0C0C1E;
-    --navbar-grey: #060714;
-    --navbar-dark: #FBFBFB;
+    --navbar-background: #1e7e34; /* Darker green for dark mode */
+    --navbar-light: #ffffff;
+    --navbar-dark: #ffffff;
+    --navbar-blue: #ffffff;
 }
 
 /* NAVBAR */
 #content nav {
     height: 56px;
-    background: var(--navbar-light);
+    background: var(--navbar-background);
     padding: 0 24px;
     display: flex;
     align-items: center;
@@ -35,6 +39,7 @@ body.dark {
     top: 0;
     left: 0;
     z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 #content nav::before {
@@ -45,7 +50,7 @@ body.dark {
     bottom: -40px;
     left: 0;
     border-radius: 50%;
-    box-shadow: -20px -20px 0 var(--navbar-light);
+    box-shadow: -20px -20px 0 var(--navbar-background);
 }
 
 #content nav a {
@@ -56,15 +61,23 @@ body.dark {
 #content nav .bx.bx-menu {
     cursor: pointer;
     color: var(--navbar-dark);
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+#content nav .bx.bx-menu:hover {
+    background: var(--navbar-hover);
 }
 
 #content nav .nav-link {
     font-size: 16px;
     transition: .3s ease;
+    font-weight: 500;
 }
 
 #content nav .nav-link:hover {
-    color: var(--navbar-blue);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 #content nav form {
@@ -91,6 +104,10 @@ body.dark {
     color: var(--navbar-dark);
 }
 
+#content nav form .form-input input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
 #content nav form .form-input button {
     width: 36px;
     height: 100%;
@@ -104,12 +121,24 @@ body.dark {
     outline: none;
     border-radius: 0 36px 36px 0;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#content nav form .form-input button:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 #content nav .notification {
     font-size: 20px;
     position: relative;
     text-decoration: none;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+}
+
+#content nav .notification:hover {
+    background: var(--navbar-hover);
 }
 
 #content nav .notification .num {
@@ -119,7 +148,7 @@ body.dark {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    border: 2px solid var(--navbar-light);
+    border: 2px solid var(--navbar-background);
     background: var(--navbar-red);
     color: var(--navbar-light);
     font-weight: 700;
@@ -131,6 +160,13 @@ body.dark {
 
 #content nav .profile {
     text-decoration: none;
+    padding: 2px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+#content nav .profile:hover {
+    background: var(--navbar-hover);
 }
 
 #content nav .profile img {
@@ -138,6 +174,7 @@ body.dark {
     height: 36px;
     object-fit: cover;
     border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 #content nav .switch-mode {
@@ -148,6 +185,11 @@ body.dark {
     background: var(--navbar-grey);
     cursor: pointer;
     position: relative;
+    transition: background-color 0.3s ease;
+}
+
+#content nav .switch-mode:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 #content nav .switch-mode::before {
@@ -157,9 +199,10 @@ body.dark {
     left: 2px;
     bottom: 2px;
     width: calc(25px - 4px);
-    background: var(--navbar-blue);
+    background: var(--navbar-light);
     border-radius: 50%;
     transition: all .3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 #content nav #switch-mode:checked + .switch-mode::before {
@@ -196,7 +239,7 @@ body.dark {
         height: 100%;
         border-radius: 0 36px 36px 0;
         color: var(--navbar-light);
-        background: var(--navbar-red);
+        background: var(--navbar-blue);
     }
 
     #content nav form.show ~ .notification,

@@ -8,7 +8,7 @@ class ReactionManager
     /**
      * Toggle like on post or comment
      */
-    public static function toggleLike($pdo, $userId, $postId = null, $commentId = null, $reactionType = 'like')
+    public static function toggleLike($pdo, $userId, $postId = null, $commentId = null)
     {
         try {
             $target = $postId ? 'post_id' : 'comment_id';
@@ -20,21 +20,14 @@ class ReactionManager
             $existingLike = $stmt->fetch();
 
             if ($existingLike) {
-                if ($existingLike['reaction_type'] === $reactionType) {
-                    // Remove like
-                    $stmt = $pdo->prepare("DELETE FROM post_likes WHERE id = ?");
-                    $result = $stmt->execute([$existingLike['id']]);
-                    $action = 'unliked';
-                } else {
-                    // Update reaction type
-                    $stmt = $pdo->prepare("UPDATE post_likes SET reaction_type = ? WHERE id = ?");
-                    $result = $stmt->execute([$reactionType, $existingLike['id']]);
-                    $action = 'changed_reaction';
-                }
+                // Just remove like (no reaction type checking needed)
+                $stmt = $pdo->prepare("DELETE FROM post_likes WHERE id = ?");
+                $result = $stmt->execute([$existingLike['id']]);
+                $action = 'unliked';
             } else {
-                // Add new like
-                $stmt = $pdo->prepare("INSERT INTO post_likes ({$target}, user_id, reaction_type) VALUES (?, ?, ?)");
-                $result = $stmt->execute([$targetValue, $userId, $reactionType]);
+                // Add new like (always use 'like')
+                $stmt = $pdo->prepare("INSERT INTO post_likes ({$target}, user_id, reaction_type) VALUES (?, ?, 'like')");
+                $result = $stmt->execute([$targetValue, $userId]);
                 $action = 'liked';
 
                 // Send notification
@@ -44,7 +37,7 @@ class ReactionManager
                     $post = $stmt->fetch();
 
                     if ($post && $post['user_id'] != $userId) {
-                        NotificationManager::sendLikeNotification($pdo, $postId, null, $userId, $post['user_id'], $reactionType);
+                        NotificationManager::sendLikeNotification($pdo, $postId, null, $userId, $post['user_id'], 'like');
                     }
                 } elseif ($result && $commentId) {
                     $stmt = $pdo->prepare("SELECT user_id, post_id FROM post_comments WHERE id = ?");
@@ -52,7 +45,7 @@ class ReactionManager
                     $comment = $stmt->fetch();
 
                     if ($comment && $comment['user_id'] != $userId) {
-                        NotificationManager::sendLikeNotification($pdo, $comment['post_id'], $commentId, $userId, $comment['user_id'], $reactionType);
+                        NotificationManager::sendLikeNotification($pdo, $comment['post_id'], $commentId, $userId, $comment['user_id'], 'like');
                     }
                 }
             }

@@ -1,4 +1,6 @@
 <?php 
+require_once 'includes/config.php';
+require_once 'includes/auth_check.php';
 include 'login/script/login_function.php'; 
 require_once 'login/script/google_oauth.php';
 ?>

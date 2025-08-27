@@ -1,11 +1,11 @@
-// post-composer.js - Updated with multiple files support
+// post-composer.js - Updated with link and priority removal
 // Module for handling post creation and composition
 
 class PostComposer {
     constructor(core) {
         this.core = core;
         this.selectedImages = []; // Store multiple selected images
-        this.selectedFiles = []; // Store multiple selected files (NEW)
+        this.selectedFiles = []; // Store multiple selected files
     }
 
     // Create a new post
@@ -30,12 +30,9 @@ class PostComposer {
         const formData = new FormData();
         formData.append('content', content);
         
-        // Add visibility and priority
+        // Add visibility (removed priority)
         const visibilityInput = document.getElementById('postVisibility');
-        const priorityInput = document.getElementById('postPriority');
-        
         formData.append('visibility', visibilityInput ? visibilityInput.value : 'public');
-        formData.append('priority', priorityInput ? priorityInput.value : 'normal');
         
         // Add media files
         this.addMediaToFormData(formData);
@@ -50,7 +47,7 @@ class PostComposer {
             formData.append(`images[${index}]`, imageFile);
         });
         
-        // Handle multiple files (NEW)
+        // Handle multiple files
         this.selectedFiles.forEach((file, index) => {
             formData.append(`files[${index}]`, file);
         });
@@ -155,7 +152,7 @@ class PostComposer {
         window.utils.showNotification(`${files.length} image(s) added. Total: ${this.selectedImages.length}`, 'success');
     }
 
-    // Handle multiple file upload (NEW)
+    // Handle multiple file upload
     handleFileUpload(input) {
         const files = Array.from(input.files);
         if (!files.length) return;
@@ -203,7 +200,7 @@ class PostComposer {
         return true;
     }
 
-    // Validate file (NEW)
+    // Validate file
     isValidFile(file) {
         const maxSize = 100 * 1024 * 1024; // 100MB per file
         
@@ -256,7 +253,7 @@ class PostComposer {
         reader.readAsDataURL(imageFile);
     }
 
-    // Create file preview element (NEW)
+    // Create file preview element
     createFilePreview(file) {
         const previewContainer = this.getOrCreateFilePreviewContainer();
         
@@ -295,7 +292,7 @@ class PostComposer {
         previewContainer.appendChild(previewDiv);
     }
 
-    // Get file icon based on file type (NEW)
+    // Get file icon based on file type
     getFileIcon(mimeType) {
         if (mimeType.includes('pdf')) return 'bx-file-pdf';
         if (mimeType.includes('word') || mimeType.includes('document')) return 'bx-file-doc';
@@ -324,7 +321,7 @@ class PostComposer {
         return container;
     }
 
-    // Get or create file preview container (NEW)
+    // Get or create file preview container
     getOrCreateFilePreviewContainer() {
         let container = document.querySelector('.files-preview-container');
         if (!container) {
@@ -372,7 +369,7 @@ class PostComposer {
         console.log(`Removed image. Remaining: ${this.selectedImages.length}`);
     }
 
-    // Remove specific file preview (NEW)
+    // Remove specific file preview
     removeFilePreview(file, previewDiv) {
         // Remove from selected files array
         const index = this.selectedFiles.indexOf(file);
@@ -403,7 +400,7 @@ class PostComposer {
         }
     }
 
-    // Remove all file previews (NEW)
+    // Remove all file previews
     removeAllFilePreviews() {
         const container = document.querySelector('.files-preview-container');
         if (container) {
@@ -423,42 +420,6 @@ class PostComposer {
         const hasFiles = this.selectedFiles.length > 0;
         
         postBtn.disabled = !hasContent && !hasImages && !hasFiles;
-    }
-
-    // Toggle link input
-    toggleLinkInput() {
-        const url = prompt('Enter URL:');
-        if (url && this.isValidUrl(url)) {
-            console.log('URL added:', url);
-            window.utils.showNotification('URL added to post', 'success');
-            // TODO: Add logic to handle link preview
-        } else if (url) {
-            window.utils.showNotification('Please enter a valid URL', 'error');
-        }
-    }
-
-    // Toggle priority selector
-    togglePrioritySelector() {
-        const priority = prompt('Set priority (normal, high, urgent):', 'normal');
-        if (['normal', 'high', 'urgent'].includes(priority)) {
-            const priorityInput = document.getElementById('postPriority');
-            if (priorityInput) {
-                priorityInput.value = priority;
-                window.utils.showNotification(`Priority set to: ${priority}`, 'success');
-            }
-        } else if (priority) {
-            window.utils.showNotification('Invalid priority. Use: normal, high, or urgent', 'error');
-        }
-    }
-
-    // Validate URL
-    isValidUrl(string) {
-        try {
-            new URL(string);
-            return true;
-        } catch (_) {
-            return false;
-        }
     }
 }
 

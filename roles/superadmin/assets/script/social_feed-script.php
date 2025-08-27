@@ -18,9 +18,9 @@ require_once __DIR__ . '/social_feed/UtilityManager.php';
 /**
  * Create a new post
  */
-function createPost($pdo, $userId, $content, $contentType = 'text', $visibility = 'public', $targetDepartments = null, $targetUsers = null, $priority = 'normal', $isPinned = false)
+function createPost($pdo, $userId, $content, $contentType = 'text', $visibility = 'public', $targetDepartments = null, $targetUsers = null, $isPinned = false)
 {
-    return PostManager::createPost($pdo, $userId, $content, $contentType, $visibility, $targetDepartments, $targetUsers, $priority, $isPinned);
+    return PostManager::createPost($pdo, $userId, $content, $contentType, $visibility, $targetDepartments, $targetUsers, $isPinned);
 }
 
 /**
@@ -106,9 +106,9 @@ function deleteComment($pdo, $commentId, $userId, $userRole = 'user')
 /**
  * Toggle like on post or comment
  */
-function toggleLike($pdo, $userId, $postId = null, $commentId = null, $reactionType = 'like')
+function toggleLike($pdo, $userId, $postId = null, $commentId = null)
 {
-    return ReactionManager::toggleLike($pdo, $userId, $postId, $commentId, $reactionType);
+    return ReactionManager::toggleLike($pdo, $userId, $postId, $commentId);
 }
 
 /**
@@ -126,9 +126,9 @@ function getLikes($pdo, $postId = null, $commentId = null)
 /**
  * Add media attachment to post
  */
-function addPostMedia($pdo, $postId, $mediaType, $filePath = null, $fileName = null, $originalName = null, $fileSize = null, $mimeType = null, $url = null, $urlTitle = null, $urlDescription = null, $sortOrder = 0)
+function addPostMedia($pdo, $postId, $mediaType, $filePath = null, $fileName = null, $originalName = null, $fileSize = null, $mimeType = null, $sortOrder = 0)
 {
-    return MediaManager::addPostMedia($pdo, $postId, $mediaType, $filePath, $fileName, $originalName, $fileSize, $mimeType, $url, $urlTitle, $urlDescription, $sortOrder);
+    return MediaManager::addPostMedia($pdo, $postId, $mediaType, $filePath, $fileName, $originalName, $fileSize, $mimeType, $sortOrder);
 }
 
 /**

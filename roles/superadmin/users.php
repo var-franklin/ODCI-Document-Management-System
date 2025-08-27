@@ -7,405 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - CVSU NAIC</title>
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .user-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .user-card {
-            background: var(--light);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-            border: 2px solid transparent;
-        }
-        
-        .user-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--blue);
-        }
-        
-        .user-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--blue), var(--light-blue));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
-        .user-info h3 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .user-info p {
-            margin: 5px 0 0 0;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .user-details {
-            font-size: 13px;
-            line-height: 1.6;
-        }
-        
-        .user-details div {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-        
-        .user-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        
-        .status-approved { background: #d4edda; color: #155724; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-restricted { background: #f8d7da; color: #721c24; }
-        
-        .user-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid var(--grey);
-        }
-        
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary { background: var(--blue); color: white; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-warning { background: #ffc107; color: #212529; }
-        .btn-danger { background: #dc3545; color: white; }
-        .btn-secondary { background: #6c757d; color: white; }
-        
-        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
-        
-        .filters {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .filter-tabs {
-            display: flex;
-            background: var(--grey);
-            border-radius: 8px;
-            padding: 4px;
-        }
-        
-        .filter-tab {
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            color: var(--dark);
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .filter-tab.active {
-            background: var(--blue);
-            color: white;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: var(--light);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            margin: 50px auto;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            font-size: 20px;
-        }
-        
-        .close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: var(--dark);
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--blue);
-        }
-        
-        .form-group.checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .form-group.checkbox input {
-            width: auto;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 30px;
-        }
-        
-        .pagination a,
-        .pagination span {
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-decoration: none;
-            color: var(--dark);
-            border: 1px solid #ddd;
-        }
-        
-        .pagination a:hover {
-            background: var(--blue);
-            color: white;
-            border-color: var(--blue);
-        }
-        
-        .pagination .current {
-            background: var(--blue);
-            color: white;
-            border-color: var(--blue);
-        }
-        
-        @media (max-width: 768px) {
-            .user-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <!-- Component Stylesheets -->
+    <link rel="stylesheet" href="assets/css/base.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/sidebar.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/navbar.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/users.css?v=<?= time() ?>">
 </head>
 <body>
-    <!-- Sidebar -->
-    <section id="sidebar">
-        <a href="#" class="brand">
-            <i class='bx bxs-dashboard'></i>
-            <span class="text">ODCI Admin</span>
-        </a>
-        <ul class="side-menu top">
-            <li>
-                <a href="dashboard.php">
-                    <i class='bx bxs-dashboard'></i>
-                    <span class="text">Dashboard</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="users.php">
-                    <i class='bx bxs-group'></i>
-                    <span class="text">Users</span>
-                </a>
-            </li>
-            <li>
-                <a href="departments.php">
-                    <i class='bx bxs-buildings'></i>
-                    <span class="text">Departments</span>
-                </a>
-            </li>
-            <li>
-                <a href="files.php">
-                    <i class='bx bxs-file'></i>
-                    <span class="text">Files</span>
-                </a>
-            </li>
-            <li>
-                <a href="folders.php">
-                    <i class='bx bxs-folder'></i>
-                    <span class="text">Folders</span>
-                </a>
-            </li>
-            <li>
-                <a href="social_feed.php">
-                    <i class='bx bx-news'></i>
-                    <span class="text">Social Feed</span>
-                </a>
-            </li>
-            <li>
-                <a href="reports.php">
-                    <i class='bx bxs-report'></i>
-                    <span class="text">Reports</span>
-                </a>
-            </li>
-        </ul>
-        <ul class="side-menu">
-            <li>
-                <a href="settings.php">
-                    <i class='bx bxs-cog'></i>
-                    <span class="text">System Settings</span>
-                </a>
-            </li>
-            <li>
-                <a href="activity_logs.php">
-                    <i class='bx bxs-time'></i>
-                    <span class="text">Activity Logs</span>
-                </a>
-            </li>
-            <li>
-                <a href="logout.php" class="logout">
-                    <i class='bx bxs-log-out-circle'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
+    <!-- Sidebar Component -->
+    <?php include 'components/sidebar.html'; ?>
 
     <!-- Content -->
     <section id="content">
-        <!-- Navbar -->
-        <nav>
-            <i class='bx bx-menu'></i>
-            <a href="#" class="nav-link">User Management</a>
-            <form action="" method="GET">
-                <div class="form-input">
-                    <input type="search" name="search" placeholder="Search users..." value="<?php echo htmlspecialchars($search); ?>">
-                    <button type="submit" class="search-btn"><i class='bx bx-search'></i></button>
-                </div>
-                <?php if ($filter !== 'all'): ?>
-                    <input type="hidden" name="filter" value="<?php echo htmlspecialchars($filter); ?>">
-                <?php endif; ?>
-                <?php if ($department_filter): ?>
-                    <input type="hidden" name="department" value="<?php echo htmlspecialchars($department_filter); ?>">
-                <?php endif; ?>
-                <?php if ($role_filter): ?>
-                    <input type="hidden" name="role" value="<?php echo htmlspecialchars($role_filter); ?>">
-                <?php endif; ?>
-            </form>
-            <input type="checkbox" id="switch-mode" hidden>
-            <label for="switch-mode" class="switch-mode"></label>
-            <a href="notifications.php" class="notification">
-                <i class='bx bxs-bell'></i>
-                <?php if ($counts['pending'] > 0): ?>
-                    <span class="num"><?php echo $counts['pending']; ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="profile.php" class="profile">
-                <img src="<?php echo $currentUser['profile_image'] ?? 'assets/img/default-avatar.png'; ?>" alt="Profile">
-            </a>
-        </nav>
+        <!-- Navbar Component -->
+        <?php include 'components/navbar.html'; ?>
 
         <!-- Main Content -->
         <main>
@@ -812,7 +427,32 @@
         </div>
     </div>
 
-    <script src="assets/js/script.js"></script>
-    <script src="assets/js/users.js"> </script>
+    <!-- Scripts -->
+    <script src="assets/js/script.js?v=<?= time() ?>"></script>
+    <script src="assets/js/users.js?v=<?= time() ?>"></script>
+
+    <!-- Page-specific initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set active sidebar item and page title for users
+            if (window.AppUtils) {
+                window.AppUtils.setActiveSidebarItem('users.php');
+                window.AppUtils.updateNavbarTitle('User Management');
+            }
+
+            // Initialize search for users if needed
+            const navbarSearchForm = document.getElementById('navbarSearchForm');
+            if (navbarSearchForm) {
+                navbarSearchForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const searchInput = document.getElementById('navbarSearchInput');
+                    if (searchInput && searchInput.value.trim()) {
+                        // Redirect to users page with search parameter
+                        window.location.href = `users.php?search=${encodeURIComponent(searchInput.value.trim())}`;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

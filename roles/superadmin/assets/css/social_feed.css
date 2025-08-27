@@ -1,10 +1,10 @@
-/* Updated social_feed.css - Smooth animations and minimalistic design */
+/* Updated social_feed.css - Single column layout with modal comments */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import url('variables.css');
 @import url('social_feed/feed-navigation.css');
 @import url('social_feed/post-composer.css');
 @import url('social_feed/post-card.css');
-@import url('social_feed/comments-panel.css');
+@import url('social_feed/modal-comments.css');
 @import url('social_feed/utilities.css');
 
 /* Root font family override */
@@ -48,74 +48,81 @@
 }
 
 #content main {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: #eee;
     padding: 32px 24px;
     min-height: 100vh;
     font-family: var(--font-family-primary);
 }
 
-/* Enhanced Content Area with smooth transitions */
+/* Single Column Content Area - Simplified */
 .feed-content-area {
-    flex: 1;
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-    transition: all var(--duration-slow) var(--transition-ultra-smooth);
-    transform: translateZ(0); /* Enable hardware acceleration */
-}
-
-/* Left Column - Enhanced with smooth scaling */
-.feed-main-column {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 24px;
-    transition: all var(--duration-slow) var(--transition-ultra-smooth);
-    transform-origin: left center;
-    will-change: transform, flex;
-    border: 5px solid red;
+    transition: all var(--duration-normal) var(--transition-smooth);
 }
 
-/* Smooth transition when comments panel opens */
-.feed-content-area.comments-open .feed-main-column {
-    flex: 0 0 58%;
-    transform: translateX(-8px) scale(0.98);
-    opacity: 0.95;
+/* Main Column - Full width now */
+.feed-main-column {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    transition: all var(--duration-normal) var(--transition-smooth);
 }
 
-/* Enhanced animations for better performance */
-.feed-content-area.comments-open {
-    animation: expandComments var(--duration-slow) var(--transition-ultra-smooth) forwards;
-}
-
-@keyframes expandComments {
-    0% {
-        gap: 24px;
-    }
-    100% {
-        gap: 32px;
-    }
-}
-
-/* Mobile Responsiveness with smooth transitions */
+/* Mobile Responsiveness - Simplified */
 @media (max-width: 768px) {
     .feed-container {
         margin: 0 16px;
     }
 
     .feed-content-area {
-        flex-direction: column;
         gap: 20px;
-        transition: gap var(--duration-normal) var(--transition-smooth);
-    }
-    
-    .feed-content-area.comments-open .feed-main-column {
-        flex: 1;
-        transform: none;
-        opacity: 1;
     }
     
     #content main {
         padding: 20px 16px;
     }
+}
+
+/* Ensure modal is always on top */
+.comments-modal-overlay {
+    z-index: 9999;
+}
+
+/* Hide any leftover side panel elements */
+.comments-panel-header,
+.comments-panel-content,
+.comments-close-btn,
+.reply-indicator,
+.comment-form:not(.comments-modal-comment-form) {
+    display: none !important;
+}
+
+/* Spinner for modal loading states */
+.spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(34, 197, 94, 0.2);
+    border-top: 2px solid var(--primary-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Ensure post cards have proper cursor for clickable comments */
+.post-action[onclick*="toggleComments"] {
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--transition-smooth);
+}
+
+.post-action[onclick*="toggleComments"]:hover {
+    background: rgba(34, 197, 94, 0.08);
+    color: var(--primary-green);
 }

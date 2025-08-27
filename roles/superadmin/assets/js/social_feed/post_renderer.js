@@ -1,4 +1,4 @@
-// post-renderer.js - Updated with multiple images support
+// post-renderer.js - Simplified without reaction picker
 // Module for rendering posts and their components
 
 class PostRenderer {
@@ -84,20 +84,14 @@ class PostRenderer {
         `;
     }
 
-    // Create post actions section
+    // Create post actions section - simplified without reactions
     createPostActions(post) {
         return `
             <div class="post-actions">
-                <div style="position: relative;">
-                    <button class="post-action ${post.user_liked ? 'liked' : ''}" 
-                            onmouseenter="showReactionPicker(${post.id})" 
-                            onmouseleave="hideReactionPicker(${post.id})"
-                            onclick="toggleLike(${post.id})">
-                        <i class='bx ${post.user_liked ? 'bxs-heart' : 'bx-heart'}'></i>
-                        <span>${post.user_liked ? 'Liked' : 'Like'}</span>
-                    </button>
-                    ${this.createReactionPicker(post.id)}
-                </div>
+                <button class="post-action ${post.user_liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                    <i class='bx ${post.user_liked ? 'bxs-heart' : 'bx-heart'}'></i>
+                    <span>${post.user_liked ? 'Liked' : 'Like'}</span>
+                </button>
                 
                 <button class="post-action" onclick="toggleComments(${post.id})">
                     <i class='bx bx-message'></i>
@@ -146,28 +140,6 @@ class PostRenderer {
         `;
     }
 
-    // Create reaction picker
-    createReactionPicker(postId) {
-        const reactions = [
-            { type: 'like', emoji: '❤️', title: 'Like' },
-            { type: 'love', emoji: '😍', title: 'Love' },
-            { type: 'laugh', emoji: '😂', title: 'Laugh' },
-            { type: 'wow', emoji: '😮', title: 'Wow' },
-            { type: 'sad', emoji: '😢', title: 'Sad' },
-            { type: 'angry', emoji: '😠', title: 'Angry' }
-        ];
-
-        const reactionButtons = reactions.map(reaction => 
-            `<button class="reaction-option" onclick="reactToPost(${postId}, '${reaction.type}')" title="${reaction.title}">${reaction.emoji}</button>`
-        ).join('');
-
-        return `
-            <div class="reaction-picker" id="reactionPicker${postId}">
-                ${reactionButtons}
-            </div>
-        `;
-    }
-
     // Create post media HTML - Updated for multiple images
     createPostMediaHTML(post) {
         if (!post.media || post.media.length === 0) return '';
@@ -183,15 +155,10 @@ class PostRenderer {
             mediaHTML += this.createImageGallery(images);
         }
         
-        // Render other media (files, links)
+        // Render other media (files only, no links)
         otherMedia.forEach(media => {
-            switch(media.media_type) {
-                case 'file':
-                    mediaHTML += this.createFileMedia(media);
-                    break;
-                case 'link':
-                    mediaHTML += this.createLinkMedia(media);
-                    break;
+            if (media.media_type === 'file') {
+                mediaHTML += this.createFileMedia(media);
             }
         });
         
@@ -261,7 +228,7 @@ class PostRenderer {
         `;
     }
 
-    // Create file media element (unchanged)
+    // Create file media element
     createFileMedia(media) {
         let filePath = media.file_path;
         
@@ -352,25 +319,6 @@ class PostRenderer {
         
         // Default file
         return { icon: 'bx-file', color: '#7f8c8d', type: 'File' };
-    }
-
-
-    // Create link media element (unchanged)
-    createLinkMedia(media) {
-        const linkImage = media.url_image ? 
-            `<img src="${media.url_image}" alt="Link preview" class="post-link-image">` : '';
-        const linkDescription = media.url_description ? 
-            `<div class="post-link-description">${media.url_description}</div>` : '';
-
-        return `
-            <div class="post-link-preview" onclick="openLink('${media.url}')">
-                ${linkImage}
-                <div class="post-link-content">
-                    <div class="post-link-title">${media.url_title || media.url}</div>
-                    ${linkDescription}
-                </div>
-            </div>
-        `;
     }
 }
 

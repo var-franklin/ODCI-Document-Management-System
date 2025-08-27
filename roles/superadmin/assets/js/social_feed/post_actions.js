@@ -1,4 +1,4 @@
-// post-actions.js
+// post-actions.js - Simplified without multiple reactions
 // Module for handling post interactions (like, edit, delete, etc.)
 
 class PostActions {
@@ -117,7 +117,7 @@ class PostActions {
         }
     }
 
-    // Toggle like on post
+    // Toggle like on post - simplified to just like/unlike
     async toggleLike(postId) {
         try {
             const response = await fetch('api/toggle_like.php', {
@@ -134,45 +134,6 @@ class PostActions {
         } catch (error) {
             console.error('Error toggling like:', error);
         }
-    }
-
-    // React to post with specific reaction
-    async reactToPost(postId, reactionType) {
-        this.hideReactionPicker(postId);
-        
-        try {
-            const response = await fetch('api/toggle_like.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ post_id: postId, reaction_type: reactionType })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.updatePostLikeUI(postId, result.reacted || result.liked, result.like_count);
-            }
-        } catch (error) {
-            console.error('Error reacting to post:', error);
-        }
-    }
-
-    // Show reaction picker
-    showReactionPicker(postId) {
-        const picker = document.getElementById(`reactionPicker${postId}`);
-        if (picker) {
-            picker.classList.add('show');
-        }
-    }
-
-    // Hide reaction picker
-    hideReactionPicker(postId) {
-        setTimeout(() => {
-            const picker = document.getElementById(`reactionPicker${postId}`);
-            if (picker && !picker.matches(':hover')) {
-                picker.classList.remove('show');
-            }
-        }, 100);
     }
 
     // Update post like UI

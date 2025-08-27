@@ -1,6 +1,9 @@
-<!-- file path: roles/superadmin/dashboard.php -->
-
-<?php include 'assets/script/dashboard-script.php'; ?>
+<?php 
+    include 'assets/script/dashboard-script.php'; 
+    require_once '../../includes/config.php';
+    require_once '../../includes/auth_check.php';
+    $user = requireRole('super_admin');
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -10,181 +13,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Dashboard - CVSU NAIC</title>
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .stat-card {
-            background: var(--light);
-            border-radius: 15px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-        }
-
-        .stat-icon.users {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-        }
-
-        .stat-icon.files {
-            background: linear-gradient(45deg, #f093fb, #f5576c);
-        }
-
-        .stat-icon.folders {
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-        }
-
-        .stat-icon.departments {
-            background: linear-gradient(45deg, #43e97b, #38f9d7);
-        }
-
-        .stat-icon.announcements {
-            background: linear-gradient(45deg, #fa709a, #fee140);
-        }
-
-        .stat-icon.storage {
-            background: linear-gradient(45deg, #a8edea, #fed6e3);
-        }
-
-        .stat-info h3 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .stat-info p {
-            margin: 5px 0 0 0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px;
-            border-bottom: 1px solid var(--grey);
-        }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--blue);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .activity-content {
-            flex: 1;
-        }
-
-        .activity-content h4 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .activity-content p {
-            margin: 2px 0 0 0;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .activity-time {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .quick-action {
-            background: var(--light);
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            text-decoration: none;
-            color: var(--dark);
-            transition: all 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .quick-action:hover {
-            border-color: var(--blue);
-            transform: translateY(-2px);
-        }
-
-        .quick-action i {
-            font-size: 28px;
-            margin-bottom: 8px;
-            display: block;
-            color: var(--blue);
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert.warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-        }
-
-        .alert.info {
-            background: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
-        }
-
-        .department-progress {
-            background: #f8f9fa;
-            border-radius: 5px;
-            height: 8px;
-            margin: 5px 0;
-            overflow: hidden;
-        }
-
-        .department-progress-bar {
-            height: 100%;
-            background: linear-gradient(45deg, var(--blue), var(--light-blue));
-            transition: width 0.3s;
-        }
-    </style>
+    <!-- Component Stylesheets -->
+    <link rel="stylesheet" href="assets/css/base.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/sidebar.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/navbar.css?v=<?= time() ?>">
+    <link rel="stylesheet" href="assets/css/dashboard.css?v=<?= time() ?>">
 </head>
 
 <body>
@@ -477,8 +310,22 @@
         </main>
     </section>
 
-    <script src="assets/js/script.js"></script>
-    <script src="assets/js/dashboard.js"></script>
+    <!-- Scripts -->
+    <script src="assets/js/script.js?v=<?= time() ?>"></script>
+    <script src="assets/js/dashboard.js?v=<?= time() ?>"></script>
+
+    <!-- Page-specific initialization -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set active sidebar item and page title for dashboard
+            if (window.AppUtils) {
+                window.AppUtils.setActiveSidebarItem('dashboard.php');
+                window.AppUtils.updateNavbarTitle('Dashboard');
+            }
+        });
+    </script>
+
+    <?php echo getSessionManagementScript(); ?>
 </body>
 
 </html>

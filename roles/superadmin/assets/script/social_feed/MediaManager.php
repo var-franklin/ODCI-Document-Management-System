@@ -8,12 +8,12 @@ class MediaManager
     /**
      * Add media attachment to post
      */
-    public static function addPostMedia($pdo, $postId, $mediaType, $filePath = null, $fileName = null, $originalName = null, $fileSize = null, $mimeType = null, $url = null, $urlTitle = null, $urlDescription = null, $sortOrder = 0)
+    public static function addPostMedia($pdo, $postId, $mediaType, $filePath = null, $fileName = null, $originalName = null, $fileSize = null, $mimeType = null, $sortOrder = 0)
     {
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO post_media (post_id, media_type, file_path, file_name, original_name, file_size, mime_type, url, url_title, url_description, sort_order) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO post_media (post_id, media_type, file_path, file_name, original_name, file_size, mime_type, sort_order) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
             return $stmt->execute([
@@ -24,9 +24,6 @@ class MediaManager
                 $originalName,
                 $fileSize,
                 $mimeType,
-                $url,
-                $urlTitle,
-                $urlDescription,
                 $sortOrder
             ]);
         } catch (Exception $e) {

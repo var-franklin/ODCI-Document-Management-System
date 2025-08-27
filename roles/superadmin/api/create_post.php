@@ -3,9 +3,12 @@ require_once '../../../includes/config.php';
 require_once '../../../includes/auth_check.php';
 require_once '../assets/script/social_feed-script.php';
 
+// Ensure clean JSON output
+ob_start();
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit;
 }
@@ -14,27 +17,22 @@ try {
     $userId = $_SESSION['user_id'];
     $content = trim($_POST['content'] ?? '');
     $visibility = $_POST['visibility'] ?? 'public';
-    $priority = $_POST['priority'] ?? 'normal';
     
     // Allow empty content if there are images or files
     $hasImages = isset($_FILES['images']) && !empty($_FILES['images']);
     $hasFiles = isset($_FILES['files']) && !empty($_FILES['files']);
     
     if (empty($content) && !$hasImages && !$hasFiles) {
+        ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Content, images, or files are required']);
         exit;
     }
     
     // Validate inputs
     $allowedVisibility = ['public', 'department', 'custom'];
-    $allowedPriority = ['normal', 'high', 'urgent'];
     
     if (!in_array($visibility, $allowedVisibility)) {
         $visibility = 'public';
-    }
-    
-    if (!in_array($priority, $allowedPriority)) {
-        $priority = 'normal';
     }
     
     // Get user's department for department posts
@@ -49,9 +47,10 @@ try {
     }
     
     // Create post
-    $postId = createPost($pdo, $userId, $content, 'text', $visibility, $targetDepartments, null, $priority);
+    $postId = createPost($pdo, $userId, $content, 'text', $visibility, $targetDepartments, null);
     
     if (!$postId) {
+        ob_end_clean();
         echo json_encode(['success' => false, 'message' => 'Failed to create post']);
         exit;
     }
@@ -71,13 +70,14 @@ try {
         $imageFiles = $_FILES['images'];
         $allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
         $maxImageSize = 20 * 1024 * 1024; // 20MB per image
-        $maxImages = 100; // Maximum 10 images per post
+        $maxImages = 100; // Maximum 100 images per post
         
         // Handle the case where images are sent as images[0], images[1], etc.
         if (isset($imageFiles['name']) && is_array($imageFiles['name'])) {
             $imageCount = count($imageFiles['name']);
             
             if ($imageCount > $maxImages) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'message' => "Maximum {$maxImages} images allowed"]);
                 exit;
             }
@@ -100,7 +100,7 @@ try {
                 }
                 
                 if ($imageSize > $maxImageSize) {
-                    $uploadErrors[] = "{$imageName}: Image too large (max 5MB)";
+                    $uploadErrors[] = "{$imageName}: Image too large (max 20MB)";
                     continue;
                 }
                 
@@ -110,7 +110,7 @@ try {
                 $physicalPath = $uploadDir . $fileName;
                 
                 if (move_uploaded_file($imageTmpName, $physicalPath)) {
-                    // Store path relative to project root (ODCi/)
+                    // Store path relative to project root (ODCI/)
                     $webPath = 'uploads/posts/' . $fileName;
                     
                     $mediaAdded = addPostMedia($pdo, $postId, 'image', $webPath, $fileName, $imageName, $imageSize, $imageType);
@@ -132,11 +132,11 @@ try {
         }
     }
     
-    // Handle multiple file uploads (NEW)
+    // Handle multiple file uploads
     if (isset($_FILES['files']) && is_array($_FILES['files'])) {
         $files = $_FILES['files'];
         $maxFileSize = 100 * 1024 * 1024; // 100MB per file
-        $maxFiles = 50; // Maximum 5 files per post
+        $maxFiles = 50; // Maximum 50 files per post
         
         // Blocked image types (should use image upload instead)
         $imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -146,6 +146,7 @@ try {
             $fileCount = count($files['name']);
             
             if ($fileCount > $maxFiles) {
+                ob_end_clean();
                 echo json_encode(['success' => false, 'message' => "Maximum {$maxFiles} files allowed"]);
                 exit;
             }
@@ -179,7 +180,7 @@ try {
                 $physicalPath = $uploadDir . $uniqueFileName;
                 
                 if (move_uploaded_file($fileTmpName, $physicalPath)) {
-                    // Store path relative to project root (ODCi/)
+                    // Store path relative to project root (ODCI/)
                     $webPath = 'uploads/posts/' . $uniqueFileName;
                     
                     $mediaAdded = addPostMedia($pdo, $postId, 'file', $webPath, $uniqueFileName, $fileName, $fileSize, $fileType);
@@ -211,7 +212,7 @@ try {
             $physicalPath = $uploadDir . $fileName;
             
             if (move_uploaded_file($file['tmp_name'], $physicalPath)) {
-                // Store path relative to project root (ODCi/)
+                // Store path relative to project root (ODCI/)
                 $webPath = 'uploads/posts/' . $fileName;
                 $fileAdded = addPostMedia($pdo, $postId, 'file', $webPath, $fileName, $file['name'], $file['size'], $file['type']);
                 
@@ -233,21 +234,8 @@ try {
         }
     }
     
-    // Handle link
-    if (isset($_POST['link']) && !empty($_POST['link'])) {
-        $link = filter_var($_POST['link'], FILTER_VALIDATE_URL);
-        if ($link) {
-            $linkAdded = addPostMedia($pdo, $postId, 'link', null, null, null, null, null, $link);
-            
-            if (!$linkAdded) {
-                $uploadErrors[] = "Failed to save link to database";
-            } else {
-                error_log("Link added successfully: {$link}");
-            }
-        } else {
-            $uploadErrors[] = "Invalid URL format";
-        }
-    }
+    // Clean output buffer and prepare response
+    ob_end_clean();
     
     // Prepare response message
     $messageParts = ['Post created successfully'];
@@ -276,6 +264,7 @@ try {
     ]);
     
 } catch(Exception $e) {
+    ob_end_clean();
     error_log("Create post error: " . $e->getMessage());
     echo json_encode([
         'success' => false,

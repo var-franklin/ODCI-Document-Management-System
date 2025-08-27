@@ -8,12 +8,12 @@ class PostManager
     /**
      * Create a new post
      */
-    public static function createPost($pdo, $userId, $content, $contentType = 'text', $visibility = 'public', $targetDepartments = null, $targetUsers = null, $priority = 'normal', $isPinned = false)
+    public static function createPost($pdo, $userId, $content, $contentType = 'text', $visibility = 'public', $targetDepartments = null, $targetUsers = null, $isPinned = false)
     {
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO posts (user_id, content, content_type, visibility, target_departments, target_users, priority, is_pinned) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO posts (user_id, content, content_type, visibility, target_departments, target_users, is_pinned)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
@@ -23,7 +23,6 @@ class PostManager
                 $visibility,
                 $targetDepartments ? json_encode($targetDepartments) : null,
                 $targetUsers ? json_encode($targetUsers) : null,
-                $priority,
                 $isPinned ? 1 : 0
             ]);
 
@@ -32,8 +31,7 @@ class PostManager
             // Log activity
             logActivity($pdo, $userId, 'create_post', 'post', $postId, 'Created new post', [
                 'content_type' => $contentType,
-                'visibility' => $visibility,
-                'priority' => $priority
+                'visibility' => $visibility
             ]);
 
             // Send notifications for public posts or specific targets
