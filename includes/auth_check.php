@@ -1,5 +1,4 @@
 <?php
-// Enhanced auth_check.php
 require_once 'config.php';
 
 // Session timeout configuration (6 hours = 21600 seconds)
@@ -113,7 +112,7 @@ function getDashboardUrl($role) {
         case 'admin':
             return '/ODCI/roles/admin/dashboard.php';
         case 'user':
-            return '/ODCI/roles/user/dashboard.php';
+            return '/ODCI/roles/user/features/dashboard.php';
         default:
             return '/ODCI/login.php?error=invalid_role';
     }

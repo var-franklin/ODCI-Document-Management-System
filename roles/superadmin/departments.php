@@ -389,102 +389,13 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <section id="sidebar">
-        <a href="#" class="brand">
-            <i class='bx bxs-dashboard'></i>
-            <span class="text">ODCI Admin</span>
-        </a>
-        <ul class="side-menu top">
-            <li>
-                <a href="dashboard.php">
-                    <i class='bx bxs-dashboard'></i>
-                    <span class="text">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="users.php">
-                    <i class='bx bxs-group'></i>
-                    <span class="text">Users</span>
-                </a>
-            </li>
-            <li class="active">
-                <a href="departments.php">
-                    <i class='bx bxs-buildings'></i>
-                    <span class="text">Departments</span>
-                </a>
-            </li>
-            <li>
-                <a href="files.php">
-                    <i class='bx bxs-file'></i>
-                    <span class="text">Files</span>
-                </a>
-            </li>
-            <li>
-                <a href="folders.php">
-                    <i class='bx bxs-folder'></i>
-                    <span class="text">Folders</span>
-                </a>
-            </li>
-            <li>
-                <a href="social_feed.php">
-                    <i class='bx bx-news'></i>
-                    <span class="text">Social Feed</span>
-                </a>
-            </li>
-            <li>
-                <a href="reports.php">
-                    <i class='bx bxs-report'></i>
-                    <span class="text">Reports</span>
-                </a>
-            </li>
-        </ul>
-        <ul class="side-menu">
-            <li>
-                <a href="settings.php">
-                    <i class='bx bxs-cog'></i>
-                    <span class="text">System Settings</span>
-                </a>
-            </li>
-            <li>
-                <a href="activity_logs.php">
-                    <i class='bx bxs-time'></i>
-                    <span class="text">Activity Logs</span>
-                </a>
-            </li>
-            <li>
-                <a href="logout.php" class="logout">
-                    <i class='bx bxs-log-out-circle'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
+<!-- Sidebar Component -->
+    <?php include 'components/sidebar.html'; ?>
 
     <!-- Content -->
     <section id="content">
-        <!-- Navbar -->
-        <nav>
-            <i class='bx bx-menu'></i>
-            <a href="#" class="nav-link">Department Management</a>
-            <form action="" method="GET">
-                <div class="form-input">
-                    <input type="search" name="search" placeholder="Search departments..." value="<?php echo htmlspecialchars($search); ?>">
-                    <button type="submit" class="search-btn"><i class='bx bx-search'></i></button>
-                </div>
-                <?php if ($status_filter !== 'all'): ?>
-                    <input type="hidden" name="status" value="<?php echo htmlspecialchars($status_filter); ?>">
-                <?php endif; ?>
-            </form>
-            <input type="checkbox" id="switch-mode" hidden>
-            <label for="switch-mode" class="switch-mode"></label>
-            <a href="notifications.php" class="notification">
-                <i class='bx bxs-bell'></i>
-            </a>
-            <a href="profile.php" class="profile">
-                <img src="<?php echo $currentUser['profile_image'] ?? 'assets/img/default-avatar.png'; ?>" alt="Profile">
-            </a>
-        </nav>
+        <!-- Navbar Component -->
+        <?php include 'components/navbar.html'; ?>
 
         <!-- Main Content -->
         <main>

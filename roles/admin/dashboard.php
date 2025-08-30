@@ -1,91 +1,90 @@
-<!-- File path: roles/admin/dashboard.php -->
+<<<<<<< HEAD
+<?php include 'script/dashboard.php'; ?>
 
+=======
 <?php
-    require_once '../../includes/config.php';
-    require_once '../../includes/auth_check.php';
+require_once '../../includes/config.php';
 
-    // Check if user is logged in
-    if (!isLoggedIn()) {
-        header('Location: login.php');
-        exit();
+// Check if user is logged in
+if (!isLoggedIn()) {
+    header('Location: login.php');
+    exit();
+}
+
+// Get current user information
+$currentUser = getCurrentUser($pdo);
+
+if (!$currentUser) {
+    // User not found, logout
+    header('Location: logout.php');
+    exit();
+}
+
+// Check if user is approved
+if (!$currentUser['is_approved']) {
+    session_unset();
+    session_destroy();
+    header('Location: login.php?error=account_not_approved');
+    exit();
+}
+
+// Get some basic statistics for the dashboard
+$stats = [
+    'total_files' => 0,
+    'total_folders' => 0,
+    'storage_used' => 0,
+    'recent_uploads' => []
+];
+
+try {
+    // Get user's file count
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) as file_count, COALESCE(SUM(file_size), 0) as total_size
+        FROM files f 
+        JOIN folders fo ON f.folder_id = fo.id 
+        WHERE f.uploaded_by = ? AND f.is_deleted = 0
+    ");
+    $stmt->execute([$currentUser['id']]);
+    $fileStats = $stmt->fetch();
+    
+    $stats['total_files'] = $fileStats['file_count'];
+    $stats['storage_used'] = $fileStats['total_size'];
+    
+    // Get user's folder count
+    $stmt = $pdo->prepare("SELECT COUNT(*) as folder_count FROM folders WHERE created_by = ? AND is_deleted = 0");
+    $stmt->execute([$currentUser['id']]);
+    $folderStats = $stmt->fetch();
+    
+    $stats['total_folders'] = $folderStats['folder_count'];
+    
+    // Get recent uploads
+    $stmt = $pdo->prepare("
+        SELECT f.original_name, f.file_size, f.uploaded_at, fo.folder_name
+        FROM files f
+        JOIN folders fo ON f.folder_id = fo.id
+        WHERE f.uploaded_by = ? AND f.is_deleted = 0
+        ORDER BY f.uploaded_at DESC
+        LIMIT 5
+    ");
+    $stmt->execute([$currentUser['id']]);
+    $stats['recent_uploads'] = $stmt->fetchAll();
+    
+} catch(Exception $e) {
+    error_log("Dashboard stats error: " . $e->getMessage());
+}
+
+// Format file size function
+function formatFileSize($bytes, $precision = 2) {
+    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+    
+    for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+        $bytes /= 1024;
     }
-
-    // Get current user information
-    $currentUser = getCurrentUser($pdo);
-
-    if (!$currentUser) {
-        // User not found, logout
-        header('Location: logout.php');
-        exit();
-    }
-
-    // Check if user is approved
-    if (!$currentUser['is_approved']) {
-        session_unset();
-        session_destroy();
-        header('Location: login.php?error=account_not_approved');
-        exit();
-    }
-
-    // Get some basic statistics for the dashboard
-    $stats = [
-        'total_files' => 0,
-        'total_folders' => 0,
-        'storage_used' => 0,
-        'recent_uploads' => []
-    ];
-
-    try {
-        // Get user's file count
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*) as file_count, COALESCE(SUM(file_size), 0) as total_size
-            FROM files f 
-            JOIN folders fo ON f.folder_id = fo.id 
-            WHERE f.uploaded_by = ? AND f.is_deleted = 0
-        ");
-        $stmt->execute([$currentUser['id']]);
-        $fileStats = $stmt->fetch();
-        
-        $stats['total_files'] = $fileStats['file_count'];
-        $stats['storage_used'] = $fileStats['total_size'];
-        
-        // Get user's folder count
-        $stmt = $pdo->prepare("SELECT COUNT(*) as folder_count FROM folders WHERE created_by = ? AND is_deleted = 0");
-        $stmt->execute([$currentUser['id']]);
-        $folderStats = $stmt->fetch();
-        
-        $stats['total_folders'] = $folderStats['folder_count'];
-        
-        // Get recent uploads
-        $stmt = $pdo->prepare("
-            SELECT f.original_name, f.file_size, f.uploaded_at, fo.folder_name
-            FROM files f
-            JOIN folders fo ON f.folder_id = fo.id
-            WHERE f.uploaded_by = ? AND f.is_deleted = 0
-            ORDER BY f.uploaded_at DESC
-            LIMIT 5
-        ");
-        $stmt->execute([$currentUser['id']]);
-        $stats['recent_uploads'] = $stmt->fetchAll();
-        
-    } catch(Exception $e) {
-        error_log("Dashboard stats error: " . $e->getMessage());
-    }
-
-    // Format file size function
-    function formatFileSize($bytes, $precision = 2) {
-        $units = array('B', 'KB', 'MB', 'GB', 'TB');
-        
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        
-        return round($bytes, $precision) . ' ' . $units[$i];
-    }
-
-
-    $user = requireRole('admin');
+    
+    return round($bytes, $precision) . ' ' . $units[$i];
+}
 ?>
+>>>>>>> b411beba4dc1d4f99bef406dd07a7c968a0e04ee
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +92,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - CVSU Naic</title>
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
+<<<<<<< HEAD
+    <link rel="stylesheet" href="assets/css/style1.css">
+</head>
+<body>
+
+    <?php include 'components/sidebar.html'; ?>
+=======
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -143,10 +149,14 @@
             </li>
         </ul>
     </section>
+>>>>>>> b411beba4dc1d4f99bef406dd07a7c968a0e04ee
 
     <!-- Content -->
     <section id="content">
         <!-- Navbar -->
+<<<<<<< HEAD
+        <?php include 'components/navbar.html'; ?>
+=======
         <nav>
             <i class='bx bx-menu'></i>
             <a href="#" class="nav-link">Categories</a>
@@ -166,6 +176,7 @@
                 <img src="../../img/default-avatar.png" alt="Profile">
             </a>
         </nav>
+>>>>>>> b411beba4dc1d4f99bef406dd07a7c968a0e04ee
 
         <!-- Main Content -->
         <main>
@@ -335,6 +346,9 @@
         </main>
     </section>
 
+<<<<<<< HEAD
+
+=======
     <script>
         const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
 
@@ -399,7 +413,6 @@
             }
         })
     </script>
-
-    <?php echo getSessionManagementScript(); ?>
+>>>>>>> b411beba4dc1d4f99bef406dd07a7c968a0e04ee
 </body>
 </html>
