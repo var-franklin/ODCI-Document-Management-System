@@ -29,10 +29,12 @@ class PostManager
             $postId = $pdo->lastInsertId();
 
             // Log activity
-            logActivity($pdo, $userId, 'create_post', 'post', $postId, 'Created new post', [
-                'content_type' => $contentType,
-                'visibility' => $visibility
-            ]);
+            if (function_exists('logActivity')) {
+                logActivity($pdo, $userId, 'create_post', 'post', $postId, 'Created new post', [
+                    'content_type' => $contentType,
+                    'visibility' => $visibility
+                ]);
+            }
 
             // Send notifications for public posts or specific targets
             if ($visibility === 'public') {
@@ -51,29 +53,48 @@ class PostManager
     }
 
     /**
-     * Update post
+     * Check if user can edit a specific post
      */
-    public static function updatePost($pdo, $postId, $userId, $content, $userRole = 'user')
+    public static function canUserEditPost($pdo, $postId, $userId, $userRole = 'user')
     {
         try {
-            // Check if user can edit this post
             $stmt = $pdo->prepare("SELECT user_id FROM posts WHERE id = ? AND is_deleted = 0");
             $stmt->execute([$postId]);
             $post = $stmt->fetch();
 
-            if (!$post || ($post['user_id'] != $userId && !in_array($userRole, ['admin', 'super_admin']))) {
+            if (!$post) {
+                return false;
+            }
+
+            // User can edit if they own the post OR they have admin privileges
+            return ($post['user_id'] == $userId) || in_array($userRole, ['admin', 'super_admin']);
+        } catch (Exception $e) {
+            error_log("Check edit post permission error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update post - Enhanced with better authorization
+     */
+    public static function updatePost($pdo, $postId, $userId, $content, $userRole = 'user')
+    {
+        try {
+            // Enhanced authorization check
+            if (!self::canUserEditPost($pdo, $postId, $userId, $userRole)) {
+                error_log("Unauthorized edit attempt - Post ID: $postId, User ID: $userId, Role: $userRole");
                 return false;
             }
 
             $stmt = $pdo->prepare("
                 UPDATE posts 
                 SET content = ?, is_edited = 1, edited_at = NOW(), updated_at = NOW()
-                WHERE id = ?
+                WHERE id = ? AND is_deleted = 0
             ");
 
             $result = $stmt->execute([$content, $postId]);
 
-            if ($result) {
+            if ($result && function_exists('logActivity')) {
                 logActivity($pdo, $userId, 'edit_post', 'post', $postId, 'Edited post');
             }
 
@@ -90,24 +111,21 @@ class PostManager
     public static function deletePost($pdo, $postId, $userId, $userRole = 'user')
     {
         try {
-            // Check if user can delete this post
-            $stmt = $pdo->prepare("SELECT user_id FROM posts WHERE id = ? AND is_deleted = 0");
-            $stmt->execute([$postId]);
-            $post = $stmt->fetch();
-
-            if (!$post || ($post['user_id'] != $userId && !in_array($userRole, ['admin', 'super_admin']))) {
+            // Use the same authorization check for consistency
+            if (!self::canUserEditPost($pdo, $postId, $userId, $userRole)) {
+                error_log("Unauthorized delete attempt - Post ID: $postId, User ID: $userId, Role: $userRole");
                 return false;
             }
 
             $stmt = $pdo->prepare("
                 UPDATE posts 
                 SET is_deleted = 1, deleted_at = NOW(), deleted_by = ?
-                WHERE id = ?
+                WHERE id = ? AND is_deleted = 0
             ");
 
             $result = $stmt->execute([$userId, $postId]);
 
-            if ($result) {
+            if ($result && function_exists('logActivity')) {
                 logActivity($pdo, $userId, 'delete_post', 'post', $postId, 'Deleted post');
             }
 

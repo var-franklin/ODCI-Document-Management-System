@@ -174,24 +174,43 @@ class CommentManager
     }
 
     /**
-     * Update comment
+     * Check if user can edit a specific comment
      */
-    public static function updateComment($pdo, $commentId, $userId, $content, $userRole = 'user')
+    public static function canUserEditComment($pdo, $commentId, $userId, $userRole = 'user')
     {
         try {
-            // Check if user can edit this comment
             $stmt = $pdo->prepare("SELECT user_id FROM post_comments WHERE id = ? AND is_deleted = 0");
             $stmt->execute([$commentId]);
             $comment = $stmt->fetch();
 
-            if (!$comment || ($comment['user_id'] != $userId && !in_array($userRole, ['admin', 'super_admin']))) {
+            if (!$comment) {
+                return false;
+            }
+
+            // User can edit if they own the comment OR they have admin privileges
+            return ($comment['user_id'] == $userId) || in_array($userRole, ['admin', 'super_admin']);
+        } catch (Exception $e) {
+            error_log("Check edit comment permission error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Update comment - Enhanced with better authorization
+     */
+    public static function updateComment($pdo, $commentId, $userId, $content, $userRole = 'user')
+    {
+        try {
+            // Enhanced authorization check
+            if (!self::canUserEditComment($pdo, $commentId, $userId, $userRole)) {
+                error_log("Unauthorized comment edit attempt - Comment ID: $commentId, User ID: $userId, Role: $userRole");
                 return false;
             }
 
             $stmt = $pdo->prepare("
                 UPDATE post_comments 
                 SET content = ?, is_edited = 1, edited_at = NOW(), updated_at = NOW()
-                WHERE id = ?
+                WHERE id = ? AND is_deleted = 0
             ");
 
             $result = $stmt->execute([$content, $commentId]);
@@ -208,17 +227,23 @@ class CommentManager
     }
 
     /**
-     * Delete comment
+     * Delete comment - Enhanced with better authorization
      */
     public static function deleteComment($pdo, $commentId, $userId, $userRole = 'user')
     {
         try {
-            // Check if user can delete this comment
+            // Enhanced authorization check
+            if (!self::canUserEditComment($pdo, $commentId, $userId, $userRole)) {
+                error_log("Unauthorized comment delete attempt - Comment ID: $commentId, User ID: $userId, Role: $userRole");
+                return false;
+            }
+
+            // Get comment info before deletion
             $stmt = $pdo->prepare("SELECT user_id, post_id FROM post_comments WHERE id = ? AND is_deleted = 0");
             $stmt->execute([$commentId]);
             $comment = $stmt->fetch();
 
-            if (!$comment || ($comment['user_id'] != $userId && !in_array($userRole, ['admin', 'super_admin']))) {
+            if (!$comment) {
                 return false;
             }
 
