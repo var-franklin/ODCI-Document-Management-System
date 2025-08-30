@@ -1,4 +1,4 @@
-// post-actions.js - Simplified without multiple reactions
+// post-actions.js - Fixed with proper authorization checks
 // Module for handling post interactions (like, edit, delete, etc.)
 
 class PostActions {
@@ -19,8 +19,19 @@ class PostActions {
         menu.classList.toggle('show');
     }
 
-    // Edit post
+    // FIXED: Edit post - Check authorization before proceeding
     async editPost(postId) {
+        // First check if user can edit this post
+        const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+        if (!postElement) return;
+
+        // Extract post data to check authorization
+        const postData = this.getPostDataFromElement(postElement);
+        if (!this.canUserEditPost(postData)) {
+            window.utils.showNotification('You do not have permission to edit this post', 'error');
+            return;
+        }
+
         try {
             const response = await fetch(`/ODCI/social_feed/api/get_post.php?id=${postId}`);
             const data = await response.json();
@@ -84,8 +95,18 @@ class PostActions {
         }
     }
 
-    // Delete post
+    // FIXED: Delete post - Check authorization before proceeding
     async deletePost(postId) {
+        // First check if user can delete this post
+        const postElement = document.querySelector(`[data-post-id="${postId}"]`);
+        if (!postElement) return;
+
+        const postData = this.getPostDataFromElement(postElement);
+        if (!this.canUserEditPost(postData)) {
+            window.utils.showNotification('You do not have permission to delete this post', 'error');
+            return;
+        }
+
         if (!confirm('Are you sure you want to delete this post?')) return;
 
         try {
@@ -130,10 +151,12 @@ class PostActions {
             
             if (result.success) {
                 this.updatePostLikeUI(postId, result.liked, result.like_count);
+                return result; // Return result for modal usage
             }
         } catch (error) {
             console.error('Error toggling like:', error);
         }
+        return null;
     }
 
     // Update post like UI
@@ -180,6 +203,32 @@ class PostActions {
                 likeCountElement.remove();
             }
         }
+    }
+
+    // FIXED: Helper method to extract post data from DOM element
+    getPostDataFromElement(postElement) {
+        // Try to get the user_id from a data attribute if available
+        const userId = postElement.dataset.userId;
+        
+        if (userId) {
+            return { user_id: parseInt(userId) };
+        }
+
+        // If not available, we cannot determine ownership from DOM alone
+        // This is a limitation, but better to be restrictive than permissive
+        return null;
+    }
+
+    // FIXED: Check if current user can edit the post
+    canUserEditPost(postData) {
+        const currentUser = this.core?.getCurrentUser();
+        if (!currentUser || !postData) {
+            return false;
+        }
+
+        // User can edit if they own the post OR have admin privileges
+        return (currentUser.id == postData.user_id) || 
+               ['admin', 'super_admin'].includes(currentUser.role);
     }
 }
 

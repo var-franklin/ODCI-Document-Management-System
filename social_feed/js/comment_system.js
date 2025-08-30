@@ -422,7 +422,7 @@ class CommentSystem {
         });
     }
 
-    // Create comment element for modal
+    // FIXED: Create comment element for modal with proper authorization checks
     createModalCommentElement(comment, isReply = false, parentAuthor = null) {
         const commentDiv = document.createElement('div');
         commentDiv.className = 'modal-comment' + (isReply ? ' modal-comment-reply' : '');
@@ -436,7 +436,7 @@ class CommentSystem {
         const actions = [];
         actions.push(`<span class="comment-action" onclick="window.commentSystem.startModalReply(${comment.id})">Reply</span>`);
 
-        // FIXED: Check if current user can edit this comment
+        // FIXED: Only show edit/delete if user can edit this comment
         if (this.canEditComment(comment)) {
             actions.push(`<span class="comment-action" onclick="window.commentSystem.startModalEdit(${comment.id})">Edit</span>`);
             actions.push(`<span class="comment-action" onclick="window.commentSystem.deleteModalComment(${comment.id})">Delete</span>`);
@@ -467,20 +467,15 @@ class CommentSystem {
 
     // FIXED: Check if user can edit comment
     canEditComment(comment) {
-        // Check if we have access to current user info
-        if (window.socialFeedCore && window.socialFeedCore.currentUser) {
-            const currentUser = window.socialFeedCore.currentUser;
-            return comment.user_id == currentUser.id || 
-                   ['admin', 'super_admin'].includes(currentUser.role);
+        // Get current user from the core system
+        const currentUser = this.core?.getCurrentUser();
+        if (!currentUser) {
+            return false;
         }
-        
-        // Fallback: try to get from session or global
-        if (window.currentUserId) {
-            return comment.user_id == window.currentUserId;
-        }
-        
-        // If we can't determine, don't show edit options
-        return false;
+
+        // User can edit if they own the comment OR have admin privileges
+        return (currentUser.id == comment.user_id) || 
+               ['admin', 'super_admin'].includes(currentUser.role);
     }
 
     // Show modal error
@@ -658,7 +653,7 @@ class CommentSystem {
         this.replyingToData = null;
     }
 
-    // IMPLEMENTED: Start edit in modal
+    // Start edit in modal
     startModalEdit(commentId) {
         this.cancelReply();
         this.cancelEdit();

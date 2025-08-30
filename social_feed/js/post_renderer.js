@@ -1,4 +1,4 @@
-// post-renderer.js - Simplified without reaction picker
+// post-renderer.js - Fixed with proper authorization checks
 // Module for rendering posts and their components
 
 class PostRenderer {
@@ -11,6 +11,7 @@ class PostRenderer {
         const postDiv = document.createElement('div');
         postDiv.className = 'post';
         postDiv.dataset.postId = post.id;
+        postDiv.dataset.userId = post.user_id; // Store user_id for authorization checks
         
         postDiv.innerHTML = this.buildPostHTML(post);
         return postDiv;
@@ -119,9 +120,12 @@ class PostRenderer {
             '<span style="color: var(--text-secondary); font-size: 12px;">(edited)</span>' : '';
     }
 
-    // Create action menu
+    // FIXED: Create action menu - Only show if user can edit
     createActionMenu(post) {
-        if (!this.core.canEditPost(post)) return '';
+        // Check if current user can edit this post
+        if (!this.canUserEditPost(post)) {
+            return '';
+        }
 
         return `
             <div class="post-actions-menu">
@@ -138,6 +142,19 @@ class PostRenderer {
                 </div>
             </div>
         `;
+    }
+
+    // FIXED: Check if current user can edit this post
+    canUserEditPost(post) {
+        // Get current user from the core system
+        const currentUser = this.core?.getCurrentUser();
+        if (!currentUser) {
+            return false;
+        }
+
+        // User can edit if they own the post OR have admin privileges
+        return (currentUser.id == post.user_id) || 
+               ['admin', 'super_admin'].includes(currentUser.role);
     }
 
     // Create post media HTML - Updated for multiple images
